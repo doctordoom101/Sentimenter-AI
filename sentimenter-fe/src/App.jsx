@@ -1,128 +1,630 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+
+// --- Shared Components ---
+
+const Sidebar = () => {
+    const location = useLocation();
+    const isActive = (path) => location.pathname === path;
+
+    return (
+        <aside className="w-64 h-screen fixed left-0 top-0 bg-white border-r border-outline-variant shadow-sm flex flex-col py-lg px-md z-40 hidden lg:flex">
+            <div className="flex items-center gap-sm mb-xl">
+                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white" style={{fontVariationSettings: "'FILL' 1"}}>analytics</span>
+                </div>
+                <div>
+                    <h1 className="text-[20px] font-bold text-primary font-plus-jakarta-sans leading-tight">Sentimenter</h1>
+                    <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Review Management</p>
+                </div>
+            </div>
+            <nav className="flex-1 space-y-1">
+                <Link to="/" className={`flex items-center px-md py-sm rounded-lg transition-all ${isActive('/') ? 'bg-surface-container-high text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-bright'}`}>
+                    <span className="material-symbols-outlined mr-sm">dashboard</span>
+                    <span className="text-sm">Dashboard</span>
+                </Link>
+                <Link to="/reviews" className={`flex items-center px-md py-sm rounded-lg transition-all ${isActive('/reviews') || isActive('/review-detail') ? 'bg-surface-container-high text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-bright'}`}>
+                    <span className="material-symbols-outlined mr-sm">rate_review</span>
+                    <span className="text-sm">Reviews</span>
+                </Link>
+                <Link to="/topics" className={`flex items-center px-md py-sm rounded-lg transition-all ${isActive('/topics') ? 'bg-surface-container-high text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-bright'}`}>
+                    <span className="material-symbols-outlined mr-sm">topic</span>
+                    <span className="text-sm">Topics</span>
+                </Link>
+                <div className="text-on-surface-variant hover:bg-surface-bright flex items-center px-md py-sm rounded-lg transition-colors cursor-pointer">
+                    <span className="material-symbols-outlined mr-sm">settings</span>
+                    <span className="text-sm">App Settings</span>
+                </div>
+                <div className="text-on-surface-variant hover:bg-surface-bright flex items-center px-md py-sm rounded-lg transition-colors cursor-pointer">
+                    <span className="material-symbols-outlined mr-sm">analytics</span>
+                    <span className="text-sm">Reports</span>
+                </div>
+            </nav>
+            <div className="mt-auto pt-lg border-t border-outline-variant">
+                <div className="flex items-center gap-sm p-sm rounded-lg hover:bg-surface-bright cursor-pointer">
+                    <img alt="User Profile" className="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLsfUzRJP7Jsog9Sgd8khCbmWLK6SRZmWFQUvXG8hfAKxTIi8fIhky7p4TVwIpB6QESghuAC2iAGfdNs7xN8hwxLtmTwS-9WISDhEDJsIM0o3iSBZOq_Q3Txs_y7ZHqIT_ZnzqF65c_zBcBflyIi8vVKeWgG_ll0FG8knUmQa83vCyN5CNixJ4tsQD-Qm7c6tPOYVxlvVz_KnnTWCy-IWgD0KkAcPQXShs42Cz46VIJXlmpDCpGLlZxqZ_c" />
+                    <div className="overflow-hidden">
+                        <p className="text-xs font-bold text-on-surface truncate">Alex Rivers</p>
+                        <p className="text-[10px] text-on-surface-variant truncate">Product Lead</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    );
+};
+
+const MobileNav = () => {
+    const location = useLocation();
+    const isActive = (path) => location.pathname === path;
+    return (
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-outline-variant px-md py-sm flex justify-around items-center z-50">
+            <Link to="/" className={`flex flex-col items-center gap-1 ${isActive('/') ? 'text-primary' : 'text-on-surface-variant'}`}>
+                <span className="material-symbols-outlined">dashboard</span>
+                <span className="text-[10px] font-bold">Home</span>
+            </Link>
+            <Link to="/reviews" className={`flex flex-col items-center gap-1 ${isActive('/reviews') ? 'text-primary' : 'text-on-surface-variant'}`}>
+                <span className="material-symbols-outlined">rate_review</span>
+                <span className="text-[10px] font-bold">Reviews</span>
+            </Link>
+            <Link to="/topics" className={`flex flex-col items-center gap-1 ${isActive('/topics') ? 'text-primary' : 'text-on-surface-variant'}`}>
+                <span className="material-symbols-outlined">topic</span>
+                <span className="text-[10px] font-bold">Topics</span>
+            </Link>
+            <button className="flex flex-col items-center gap-1 text-on-surface-variant">
+                <span className="material-symbols-outlined">settings</span>
+                <span className="text-[10px] font-bold">Settings</span>
+            </button>
+        </nav>
+    );
+};
+
+const TopBar = ({ title, showSearch = true, backTo = null }) => {
+    const navigate = useNavigate();
+    return (
+        <header className="h-16 fixed top-0 right-0 left-0 lg:left-64 z-30 bg-white border-b border-outline-variant shadow-sm flex justify-between items-center px-lg">
+            <div className="flex items-center gap-lg flex-1">
+                {backTo && (
+                    <button onClick={() => navigate(backTo)} className="p-2 hover:bg-surface-container-low rounded-full transition-colors flex items-center justify-center">
+                        <span className="material-symbols-outlined">arrow_back</span>
+                    </button>
+                )}
+                {title && <h2 className="font-plus-jakarta-sans text-lg font-bold text-primary">{title}</h2>}
+                {showSearch && (
+                    <div className="relative w-80 hidden md:block">
+                        <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+                        <input className="w-full bg-surface-container-low border-none rounded-full pl-xl pr-md py-xs text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search..." type="text" />
+                    </div>
+                )}
+            </div>
+            <div className="flex items-center gap-md">
+                <button className="p-sm rounded-full hover:bg-surface-bright text-on-surface-variant">
+                    <span className="material-symbols-outlined">notifications</span>
+                </button>
+                <button className="p-sm rounded-full hover:bg-surface-bright text-on-surface-variant">
+                    <span className="material-symbols-outlined">help</span>
+                </button>
+                <div className="h-8 w-[1px] bg-outline-variant mx-2"></div>
+                <img className="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida/AP1WRLsfUzRJP7Jsog9Sgd8khCbmWLK6SRZmWFQUvXG8hfAKxTIi8fIhky7p4TVwIpB6QESghuAC2iAGfdNs7xN8hwxLtmTwS-9WISDhEDJsIM0o3iSBZOq_Q3Txs_y7ZHqIT_ZnzqF65c_zBcBflyIi8vVKeWgG_ll0FG8knUmQa83vCyN5CNixJ4tsQD-Qm7c6tPOYVxlvVz_KnnTWCy-IWgD0KkAcPQXShs42Cz46VIJXlmpDCpGLlZxqZ_c" />
+            </div>
+        </header>
+    );
+};
+
+// --- Screen Components ---
+
+const DashboardPage = () => {
+    const navigate = useNavigate();
+    return (
+        <div className="min-h-screen">
+            <Sidebar />
+            <TopBar title="Dashboard" />
+            <main className="lg:ml-64 pt-24 px-lg pb-24 lg:pb-lg space-y-lg max-w-[1440px] mx-auto">
+                {/* KPI Cards */}
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+                    <div className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0]">
+                        <p className="text-xs font-bold text-on-surface-variant mb-xs">Total Reviews</p>
+                        <div className="flex items-end justify-between">
+                            <h2 className="text-3xl font-bold font-plus-jakarta-sans text-primary">24.5k</h2>
+                            <span className="text-secondary text-xs font-bold flex items-center bg-secondary-container/20 px-xs py-[2px] rounded">
+                                <span className="material-symbols-outlined text-[14px] mr-[2px]">trending_up</span>+12%
+                            </span>
+                        </div>
+                    </div>
+                    <div className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0]">
+                        <p className="text-xs font-bold text-on-surface-variant mb-xs">Average Play Store Rating</p>
+                        <div className="flex items-end gap-sm">
+                            <h2 className="text-3xl font-bold font-plus-jakarta-sans text-primary">4.2<span className="text-on-surface-variant text-[16px] font-normal">/5</span></h2>
+                            <div className="flex text-secondary-container mb-2">
+                                {[1, 2, 3, 4].map(i => <span key={i} className="material-symbols-outlined text-[20px]" style={{fontVariationSettings: "'FILL' 1"}}>star</span>)}
+                                <span className="material-symbols-outlined text-[20px]" style={{fontVariationSettings: "'FILL' 0"}}>star</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0]">
+                        <p className="text-xs font-bold text-on-surface-variant mb-xs">Overall Sentiment Score</p>
+                        <div className="flex items-end justify-between">
+                            <h2 className="text-3xl font-bold font-plus-jakarta-sans text-primary">78%</h2>
+                            <div className="flex items-center gap-xs">
+                                <span className="text-secondary text-xs font-bold bg-secondary-container/20 px-xs py-[2px] rounded">Positive</span>
+                                <span className="material-symbols-outlined text-secondary text-[18px]">trending_up</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Charts Row */}
+                <section className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+                    <div className="lg:col-span-2 bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0]">
+                        <div className="flex justify-between items-center mb-lg">
+                            <h3 className="font-bold font-plus-jakarta-sans text-primary">Sentiment Trend Over Time</h3>
+                            <div className="flex gap-sm">
+                                <div className="flex items-center gap-xs text-xs">
+                                    <span className="w-2 h-2 rounded-full bg-secondary-container"></span>
+                                    <span>Positive</span>
+                                </div>
+                                <div className="flex items-center gap-xs text-xs">
+                                    <span className="w-2 h-2 rounded-full bg-on-tertiary-container"></span>
+                                    <span>Negative</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="h-64 relative">
+                            <svg className="w-full h-full" viewBox="0 0 1000 200">
+                                <path d="M0,150 Q50,130 100,140 T200,100 T300,120 T400,80 T500,90 T600,60 T700,70 T800,40 T900,50 T1000,30" fill="none" stroke="#6cf8bb" strokeLinecap="round" strokeWidth="3"></path>
+                                <path d="M0,180 Q50,170 100,175 T200,160 T300,165 T400,180 T500,170 T600,185 T700,175 T800,190 T900,180 T1000,185" fill="none" stroke="#f23d5c" strokeDasharray="4" strokeLinecap="round" strokeWidth="2"></path>
+                            </svg>
+                            <div className="absolute bottom-0 left-0 w-full flex justify-between text-[10px] font-bold text-on-surface-variant pt-sm uppercase tracking-wider">
+                                <span>01 Oct</span>
+                                <span>10 Oct</span>
+                                <span>20 Oct</span>
+                                <span>30 Oct</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0] flex flex-col">
+                        <h3 className="font-bold font-plus-jakarta-sans text-primary mb-lg">Sentiment Breakdown</h3>
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                            <div className="relative w-40 h-40 rounded-full sentiment-donut flex items-center justify-center">
+                                <div className="w-28 h-28 bg-white rounded-full flex flex-col items-center justify-center">
+                                    <p className="text-2xl font-bold font-plus-jakarta-sans">78%</p>
+                                    <p className="text-[10px] font-bold text-on-surface-variant uppercase">Positive</p>
+                                </div>
+                            </div>
+                            <div className="mt-lg w-full space-y-sm">
+                                <div className="flex justify-between items-center text-sm">
+                                    <div className="flex items-center gap-xs">
+                                        <span className="w-3 h-3 rounded-sm bg-secondary-container"></span>
+                                        <span>Positive</span>
+                                    </div>
+                                    <span className="font-bold">78%</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <div className="flex items-center gap-xs">
+                                        <span className="w-3 h-3 rounded-sm bg-on-tertiary-container"></span>
+                                        <span>Negative</span>
+                                    </div>
+                                    <span className="font-bold">12%</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <div className="flex items-center gap-xs">
+                                        <span className="w-3 h-3 rounded-sm bg-on-surface-variant"></span>
+                                        <span>Neutral</span>
+                                    </div>
+                                    <span className="font-bold">10%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Bottom Row */}
+                <section className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+                    <div className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0]">
+                        <h3 className="font-bold font-plus-jakarta-sans text-primary mb-lg">Top Topics</h3>
+                        <div className="space-y-md">
+                            {[
+                                { label: "Fast Loading", value: "85%", color: "bg-secondary-container" },
+                                { label: "UI Feedback", value: "62%", color: "bg-secondary-container" },
+                                { label: "Login Issue", value: "15%", color: "bg-on-tertiary-container" },
+                                { label: "App Crash", value: "5%", color: "bg-on-tertiary-container" }
+                            ].map((item, idx) => (
+                                <div key={idx} className="space-y-xs">
+                                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
+                                        <span>{item.label}</span>
+                                        <span>{item.value} Pos.</span>
+                                    </div>
+                                    <div className="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+                                        <div className={`${item.color} h-full`} style={{ width: item.value }}></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <button onClick={() => navigate('/topics')} className="w-full mt-xl py-sm border border-outline-variant rounded-lg text-xs font-bold hover:bg-surface-bright transition-colors uppercase tracking-widest">View All Topics</button>
+                    </div>
+                    <div className="lg:col-span-2 bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0]">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-lg">
+                            <h3 className="font-bold font-plus-jakarta-sans text-primary">Recent Review Feed</h3>
+                            <div className="flex bg-surface-container-low p-1 rounded-lg">
+                                <button className="px-md py-xs bg-white shadow-sm rounded-md text-xs font-bold text-primary">All</button>
+                                <button className="px-md py-xs text-xs font-bold text-on-surface-variant hover:text-primary transition-colors">Positive</button>
+                                <button className="px-md py-xs text-xs font-bold text-on-surface-variant hover:text-primary transition-colors">Negative</button>
+                            </div>
+                        </div>
+                        <div className="space-y-md">
+                            <div onClick={() => navigate('/review-detail')} className="p-md rounded-lg border border-outline-variant hover:border-primary/20 transition-all cursor-pointer group">
+                                <div className="flex justify-between items-start mb-sm">
+                                    <div className="flex items-center gap-sm">
+                                        <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center font-bold text-primary text-[12px]">AH</div>
+                                        <div>
+                                            <p className="text-xs font-bold text-primary">Andi H.</p>
+                                            <div className="flex text-secondary-container">
+                                                {[1, 2, 3, 4].map(i => <span key={i} className="material-symbols-outlined text-[14px]" style={{fontVariationSettings: "'FILL' 1"}}>star</span>)}
+                                                <span className="material-symbols-outlined text-[14px]" style={{fontVariationSettings: "'FILL' 0"}}>star</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-bold text-on-surface-variant uppercase">2 hours ago</p>
+                                        <p className="text-[10px] text-outline font-bold">v2.1.0</p>
+                                    </div>
+                                </div>
+                                <p className="text-sm text-on-surface mb-sm">Aplikasi sangat membantu, navigasinya lancar. Senang akhirnya ada dark mode yang beneran hitam pekat.</p>
+                                <div className="flex justify-between items-center">
+                                    <span className="bg-secondary-container/10 text-on-secondary-container px-sm py-[2px] rounded-full text-[10px] font-bold tracking-wider uppercase">Positive</span>
+                                    <button className="opacity-0 group-hover:opacity-100 transition-opacity text-primary text-xs font-bold flex items-center">
+                                        Reply <span className="material-symbols-outlined text-[16px] ml-xs">chat</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div onClick={() => navigate('/review-detail')} className="p-md rounded-lg border border-outline-variant hover:border-primary/20 transition-all cursor-pointer group">
+                                <div className="flex justify-between items-start mb-sm">
+                                    <div className="flex items-center gap-sm">
+                                        <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center font-bold text-primary text-[12px]">BS</div>
+                                        <div>
+                                            <p className="text-xs font-bold text-primary">Budi Santoso</p>
+                                            <div className="flex text-on-tertiary-container">
+                                                {[1, 2].map(i => <span key={i} className="material-symbols-outlined text-[14px]" style={{fontVariationSettings: "'FILL' 1"}}>star</span>)}
+                                                {[1, 2, 3].map(i => <span key={i} className="material-symbols-outlined text-[14px]" style={{fontVariationSettings: "'FILL' 0"}}>star</span>)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-bold text-on-surface-variant uppercase">5 hours ago</p>
+                                        <p className="text-[10px] text-outline font-bold">v2.1.0</p>
+                                    </div>
+                                </div>
+                                <p className="text-sm text-on-surface mb-sm">Kenapa setelah update sering crash pas mau upload dokumen? Mohon segera diperbaiki.</p>
+                                <div className="flex justify-between items-center">
+                                    <span className="bg-on-tertiary-container/10 text-on-tertiary-container px-sm py-[2px] rounded-full text-[10px] font-bold tracking-wider uppercase">Negative</span>
+                                    <button className="opacity-0 group-hover:opacity-100 transition-opacity text-primary text-xs font-bold flex items-center">
+                                        Reply <span className="material-symbols-outlined text-[16px] ml-xs">chat</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            <MobileNav />
+        </div>
+    );
+};
+
+const ReviewDetailPage = () => {
+    return (
+        <div className="min-h-screen">
+            <Sidebar />
+            <TopBar title="Review Details" backTo="/reviews" showSearch={false} />
+            <main className="lg:ml-64 pt-24 pb-24 px-6 max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+                    <div className="lg:col-span-8 space-y-gutter">
+                        <div className="bg-white rounded-xl border border-outline-variant shadow-sm p-xl">
+                            <div className="flex justify-between items-start mb-lg">
+                                <div className="flex gap-1 text-on-tertiary-container">
+                                    <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+                                    {[1, 2, 3, 4].map(i => <span key={i} className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>star</span>)}
+                                </div>
+                                <span className="px-sm py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold uppercase tracking-wider">Negative Sentiment</span>
+                            </div>
+                            <h3 className="text-2xl font-bold font-plus-jakarta-sans text-primary mb-md">Constant crashes since the last update</h3>
+                            <p className="text-lg text-on-surface-variant leading-relaxed">
+                                I've been using this app for months and it was great, but since version 4.2.0 it just keeps crashing every time I try to open the dashboard. The user interface also feels sluggish now. I really hope you fix this soon because it's becoming unusable for my daily workflow. I tried clearing the cache but it didn't help.
+                            </p>
+                            <div className="mt-xl pt-lg border-t border-outline-variant flex flex-wrap gap-xl text-on-surface-variant">
+                                <div className="flex items-center gap-sm">
+                                    <span className="material-symbols-outlined text-sm">schedule</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Oct 24, 2023 • 14:32</span>
+                                </div>
+                                <div className="flex items-center gap-sm">
+                                    <span className="material-symbols-outlined text-sm">install_mobile</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">v4.2.0 (Build 89)</span>
+                                </div>
+                                <div className="flex items-center gap-sm">
+                                    <span className="material-symbols-outlined text-sm">devices</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Pixel 7 Pro • Android 14</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap gap-md">
+                            <button className="bg-primary text-white px-lg py-3 rounded-lg text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity">
+                                <span className="material-symbols-outlined">reply</span> Reply to User
+                            </button>
+                            <button className="bg-white border border-outline-variant text-primary px-lg py-3 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-surface-container-low transition-colors">
+                                <span className="material-symbols-outlined">check_circle</span> Mark Resolved
+                            </button>
+                            <button className="bg-white border border-outline-variant text-on-tertiary-container px-lg py-3 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-error-container/20 transition-colors">
+                                <span className="material-symbols-outlined">flag</span> Flag Team
+                            </button>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-4 space-y-gutter">
+                        <div className="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+                            <div className="bg-primary-container px-lg py-md flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-white">
+                                    <span className="material-symbols-outlined">smart_toy</span>
+                                    <span className="font-bold font-plus-jakarta-sans">AI Insights</span>
+                                </div>
+                                <div className="bg-white/10 px-sm py-1 rounded text-white font-mono text-[10px]">CONFIDENCE: 94%</div>
+                            </div>
+                            <div className="p-lg space-y-lg">
+                                <div>
+                                    <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-sm block">Detected Keywords</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        <span className="px-3 py-1 bg-error-container text-on-error-container rounded-lg text-xs font-bold">crash</span>
+                                        <span className="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-lg text-xs font-bold">UI</span>
+                                        <span className="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-lg text-xs font-bold">update</span>
+                                    </div>
+                                </div>
+                                <div className="p-md bg-surface-variant/20 rounded-lg border border-surface-variant">
+                                    <p className="text-sm text-on-surface-variant italic">
+                                        "The user is expressing high frustration primarily due to technical stability issues introduced in the latest version."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                            <div className="flex items-center gap-md mb-lg">
+                                <img className="w-16 h-16 rounded-full bg-surface-container-high" src="https://lh3.googleusercontent.com/aida/AP1WRLt6Vpae4yZHU35_nb8FS2ecVPBBcvA7mYJc9veTYRtDlGmklXzCdf7WJ1yMT5D8Yb8AoYHa9gWnYNWWVlM-mtI27gxpdy5G83Mh3CCfYjsfB3FmyaM_RxvyzOZdvvcoUdFRTTgXj6KpJSEaV5LfVpsjkvByNvQiR6vKc-ryPP-_AtWP5H7Gqz8Weg6eOUAq0hnxQU9gesbWqqfEq8o1XaEHDnWTRF0oWLFA8ezXKNj4BNmVO77NgkhRTf8" />
+                                <div>
+                                    <h4 className="font-bold font-plus-jakarta-sans text-primary">Marcus Jensen</h4>
+                                    <p className="text-xs text-on-surface-variant">Copenhagen, Denmark</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-sm">
+                                <div className="p-md bg-surface-container-low rounded-xl text-center">
+                                    <span className="block text-2xl font-bold font-plus-jakarta-sans text-primary">12</span>
+                                    <span className="text-[10px] font-bold text-on-surface-variant uppercase">Reviews</span>
+                                </div>
+                                <div className="p-md bg-surface-container-low rounded-xl text-center">
+                                    <span className="block text-2xl font-bold font-plus-jakarta-sans text-primary">4.2</span>
+                                    <span className="text-[10px] font-bold text-on-surface-variant uppercase">Avg</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <MobileNav />
+        </div>
+    );
+};
+
+const AllReviewsPage = () => {
+    const navigate = useNavigate();
+    return (
+        <div className="min-h-screen">
+            <Sidebar />
+            <TopBar title="Reviews Explorer" />
+            <main className="lg:ml-64 pt-24 pb-24 px-6 space-y-6 max-w-[1440px] mx-auto">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold font-plus-jakarta-sans text-on-surface">All Reviews</h1>
+                        <p className="text-on-surface-variant mt-1">Analyzing 12,482 user entries across iOS and Android.</p>
+                    </div>
+                    <div className="flex gap-4">
+                        <div className="bg-surface-container-highest px-4 py-2 rounded-xl border border-outline-variant">
+                            <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Avg Rating</p>
+                            <div className="flex items-center gap-1">
+                                <span className="text-xl font-bold">4.8</span>
+                                <span className="material-symbols-outlined text-secondary text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-xl border border-outline-variant shadow-sm flex flex-col gap-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex-1 min-w-[200px] relative">
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                            <input className="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-sm" placeholder="Search keywords..." type="text" />
+                        </div>
+                        <div className="flex bg-surface-container-low p-1 rounded-lg border border-outline-variant">
+                            <button className="px-4 py-1.5 text-xs font-bold rounded-md bg-white shadow-sm text-primary">All</button>
+                            <button className="px-4 py-1.5 text-xs font-bold rounded-md text-on-surface-variant hover:text-on-surface">Positive</button>
+                            <button className="px-4 py-1.5 text-xs font-bold rounded-md text-on-surface-variant hover:text-on-surface">Negative</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    {[
+                        { name: "Sarah Jenkins", role: "Verified Buyer", rating: 5, sentiment: "Positive", date: "Oct 12, 2023", title: "The new analysis engine is incredible!", content: "I've been using Sentimenter for over a year now, but the v2.4 update really changed the game...", img: "https://lh3.googleusercontent.com/aida/AP1WRLtAvULZl-wB6wLiOeBMBFN1_ZZUkXUasP38Nm6yuLDtsqGnmF5OWdAytnydGjc1QVbL4s3lyModKce4msxFC8lfTITewgBb9daWQPdBNHOMey21HxFt6AWjukMj2yPN8Gh_sT5KDIYPM_CidwwPvJMIyljE_Vgqw8tNN5MtT4I4dDKHXD3YP8npqi45Tr9m5cT7ut8S5bIcDOg_OYH8jG7NNYeFI8XhbeqdwvIjQCpLCrK-rQaTghrxp1g" },
+                        { name: "Mark Kovalski", role: "Premium User", rating: 2, sentiment: "Negative", date: "Oct 11, 2023", title: "Login issues after recent update", content: "Frustrated. Ever since I updated to v2.3.9, the app hangs at the splash screen for about 20 seconds...", initials: "MK" }
+                    ].map((review, i) => (
+                        <div key={i} className="bg-white p-6 rounded-xl border border-outline-variant hover:border-primary transition-all shadow-sm group">
+                            <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+                                <div className="lg:w-48 flex-shrink-0 flex items-center lg:flex-col lg:items-start gap-3">
+                                    {review.img ? <img src={review.img} className="size-12 rounded-full border-2 border-surface-container-highest" /> : <div className="size-12 rounded-full bg-surface-container flex items-center justify-center font-bold">{review.initials}</div>}
+                                    <div>
+                                        <h4 className="font-bold text-on-surface text-sm">{review.name}</h4>
+                                        <p className="text-[10px] text-on-surface-variant font-bold uppercase">{review.role}</p>
+                                    </div>
+                                </div>
+                                <div className="flex-1 space-y-3">
+                                    <div className="flex items-center justify-between flex-wrap gap-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`flex ${review.sentiment === 'Positive' ? 'text-secondary' : 'text-error'}`}>
+                                                {Array.from({ length: 5 }).map((_, idx) => (
+                                                    <span key={idx} className="material-symbols-outlined text-[18px]" style={{fontVariationSettings: idx < review.rating ? "'FILL' 1" : "'FILL' 0"}}>star</span>
+                                                ))}
+                                            </div>
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${review.sentiment === 'Positive' ? 'bg-secondary-container text-on-secondary-container' : 'bg-error-container text-on-error-container'}`}>{review.sentiment}</span>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-on-surface-variant uppercase">{review.date}</span>
+                                    </div>
+                                    <h3 className="font-bold text-base leading-snug font-plus-jakarta-sans">{review.title}</h3>
+                                    <p className="text-on-surface-variant text-sm leading-relaxed max-w-3xl">{review.content}</p>
+                                </div>
+                                <div className="lg:w-32 flex lg:justify-end">
+                                    <button onClick={() => navigate('/review-detail')} className="w-full lg:w-auto px-4 py-2 border border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary rounded-lg text-[10px] font-bold transition-all uppercase tracking-widest">Details</button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </main>
+            <MobileNav />
+        </div>
+    );
+};
+
+const TopicsPage = () => {
+    return (
+        <div className="min-h-screen">
+            <Sidebar />
+            <TopBar title="Topic Analysis" />
+            <main className="lg:ml-64 pt-24 pb-24 px-margin-desktop max-w-[1440px] mx-auto">
+                <section className="mb-xl">
+                    <h2 className="text-3xl font-bold font-plus-jakarta-sans text-on-surface mb-xs">Topic Analysis</h2>
+                    <p className="text-on-surface-variant max-w-2xl">Discover recurring themes in user feedback automatically clustered by AI.</p>
+                </section>
+
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-xl">
+                    <div className="bg-white p-lg rounded-xl shadow-sm border border-[#E2E8F0]">
+                        <div className="flex justify-between items-start mb-md">
+                            <span className="p-xs bg-surface-container rounded-lg text-primary material-symbols-outlined">trending_up</span>
+                            <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Frequency</span>
+                        </div>
+                        <h3 className="text-xs font-bold text-on-surface-variant mb-xs">Most Frequent Topic</h3>
+                        <p className="text-xl font-bold font-plus-jakarta-sans text-on-surface">Login Issues</p>
+                        <div className="mt-4 flex items-center gap-xs">
+                            <span className="text-secondary font-bold text-sm">1,240</span>
+                            <span className="text-[10px] text-on-surface-variant">mentions this week</span>
+                        </div>
+                    </div>
+                    <div className="bg-white p-lg rounded-xl shadow-sm border border-[#E2E8F0]">
+                        <div className="flex justify-between items-start mb-md">
+                            <span className="p-xs bg-secondary-container rounded-lg text-on-secondary-container material-symbols-outlined">bolt</span>
+                            <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Velocity</span>
+                        </div>
+                        <h3 className="text-xs font-bold text-on-surface-variant mb-xs">Fastest Growing</h3>
+                        <p className="text-xl font-bold font-plus-jakarta-sans text-on-surface">UI Performance</p>
+                        <div className="mt-4 flex items-center gap-xs">
+                            <span className="text-secondary font-bold text-sm">+24%</span>
+                            <span className="text-[10px] text-on-surface-variant">since last period</span>
+                        </div>
+                    </div>
+                    <div className="bg-white p-lg rounded-xl shadow-sm border border-[#E2E8F0]">
+                        <div className="flex justify-between items-start mb-md">
+                            <span className="p-xs bg-tertiary-fixed rounded-lg text-on-tertiary-fixed-variant material-symbols-outlined">warning</span>
+                            <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Criticality</span>
+                        </div>
+                        <h3 className="text-xs font-bold text-on-surface-variant mb-xs">Top Negative</h3>
+                        <p className="text-xl font-bold font-plus-jakarta-sans text-on-surface">Payment Failure</p>
+                        <div className="mt-4 flex items-center gap-xs">
+                            <span className="text-error font-bold text-sm">82%</span>
+                            <span className="text-[10px] text-on-surface-variant">negative sentiment</span>
+                        </div>
+                    </div>
+                </section>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+                    <section className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+                        <div className="p-lg border-b border-outline-variant flex justify-between items-center">
+                            <h3 className="font-bold font-plus-jakarta-sans">Topics Overview</h3>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-surface-container-low/50">
+                                    <tr>
+                                        <th className="px-lg py-md text-[10px] font-bold text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">Topic</th>
+                                        <th className="px-lg py-md text-[10px] font-bold text-on-surface-variant uppercase tracking-widest border-b border-outline-variant text-right">Vol</th>
+                                        <th className="px-lg py-md text-[10px] font-bold text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">Sentiment</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-outline-variant">
+                                    {[
+                                        { name: "Stability", vol: "2,840", pos: 20, neu: 30, neg: 50, color: "bg-error" },
+                                        { name: "Performance", vol: "1,912", pos: 65, neu: 25, neg: 10, color: "bg-secondary" },
+                                        { name: "UI/UX", vol: "1,450", pos: 45, neu: 45, neg: 10, color: "bg-primary" }
+                                    ].map((topic, i) => (
+                                        <tr key={i} className="hover:bg-surface-container-lowest transition-colors cursor-pointer">
+                                            <td className="px-lg py-lg">
+                                                <div className="flex items-center gap-md">
+                                                    <div className={`w-2 h-2 rounded-full ${topic.color}`}></div>
+                                                    <span className="text-sm font-bold">{topic.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-lg py-lg text-right font-mono text-sm">{topic.vol}</td>
+                                            <td className="px-lg py-lg min-w-[160px]">
+                                                <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-surface-container">
+                                                    <div className="sentiment-bar-pos" style={{ width: `${topic.pos}%` }}></div>
+                                                    <div className="sentiment-bar-neu" style={{ width: `${topic.neu}%` }}></div>
+                                                    <div className="sentiment-bar-neg" style={{ width: `${topic.neg}%` }}></div>
+                                                </div>
+                                                <div className="flex justify-between mt-xs text-[10px] font-bold text-on-surface-variant uppercase">
+                                                    <span>{topic.pos}% Pos</span>
+                                                    <span>{topic.neg}% Neg</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-lg flex flex-col h-full">
+                        <div className="mb-lg">
+                            <h3 className="font-bold font-plus-jakarta-sans mb-xs">Top Keywords</h3>
+                            <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Stability (Selected)</p>
+                        </div>
+                        <div className="flex-1 flex flex-wrap content-start gap-sm">
+                            <span className="px-md py-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold rounded-lg text-lg">crash</span>
+                            <span className="px-sm py-xs bg-surface-container text-on-surface rounded-lg text-sm">login</span>
+                            <span className="px-lg py-md bg-error-container text-on-error-container font-extrabold rounded-xl text-xl">slow</span>
+                            <span className="px-md py-sm bg-surface-container text-on-surface rounded-lg text-md">timeout</span>
+                            <span className="px-sm py-xs bg-surface-container text-on-surface rounded-lg text-xs">v2.4.1</span>
+                            <span className="px-md py-sm bg-secondary-container text-on-secondary-container font-bold rounded-lg text-lg">error</span>
+                        </div>
+                        <div className="mt-xl p-md bg-surface-container-low rounded-lg border border-outline-variant/30">
+                            <div className="flex items-center gap-sm mb-xs">
+                                <span className="material-symbols-outlined text-primary text-[18px]">lightbulb</span>
+                                <span className="text-xs font-bold text-on-surface">Insight</span>
+                            </div>
+                            <p className="text-[12px] text-on-surface-variant leading-relaxed">
+                                Keywords <span className="font-bold text-on-tertiary-fixed-variant">"crash"</span> increased by 40% on Android v2.4 rollout.
+                            </p>
+                        </div>
+                    </section>
+                </div>
+            </main>
+            <MobileNav />
+        </div>
+    );
+};
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-
-      <div className="flex h-screen items-center justify-center bg-zinc-900 text-white">
-        <h1 className="text-4xl font-black tracking-tight text-cyan-400">
-          Vite + Tailwind v4 is Running!
-        </h1>
-      </div>
-    </>
-  )
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/reviews" element={<AllReviewsPage />} />
+                <Route path="/review-detail" element={<ReviewDetailPage />} />
+                <Route path="/topics" element={<TopicsPage />} />
+            </Routes>
+        </Router>
+    );
 }
 
-export default App
+export default App;
