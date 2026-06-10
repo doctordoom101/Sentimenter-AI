@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+google-play-scraper
+pandas
+sqlalchemy
+psycopg2-binary
+python-dotenv
+pydantic
+pydantic-settings
