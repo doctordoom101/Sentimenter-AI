@@ -7,3 +7,9 @@ psycopg2-binary
 python-dotenv
 pydantic
 pydantic-settings
+
+scikit-learn
+Sastrawi
+nltk
+jupyter
+joblib
