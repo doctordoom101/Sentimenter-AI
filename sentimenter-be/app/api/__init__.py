@@ -1,8 +1,7 @@
-# Placeholder for API routes
 from fastapi import APIRouter
+from app.api.endpoints import sentiment, dashboard, reviews
 
 router = APIRouter()
-
-@router.get("/health")
-async def health_check():
-    return {"status": "healthy"}
+router.include_router(sentiment.router, prefix="/sentiment", tags=["sentiment"])
+router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
+router.include_router(reviews.router, prefix="/reviews", tags=["reviews"])

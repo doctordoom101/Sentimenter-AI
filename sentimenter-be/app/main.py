@@ -21,4 +21,4 @@ app.add_middleware(
 async def root():
     return {"message": "Welcome to Sentimenter API", "status": "online"}
 
-# app.include_router(api_router, prefix="/api")
+app.include_router(api_router, prefix="/api")
