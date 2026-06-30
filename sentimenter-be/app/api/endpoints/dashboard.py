@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, case
 from app.core.database import get_db
 from app.models.review import Review
 from datetime import datetime
@@ -46,8 +46,8 @@ def get_sentiment_trends(db: Session = Depends(get_db)):
     # Group by date
     results = db.query(
         func.strftime('%Y-%m-%d', Review.at).label('date'),
-        func.sum(func.case((Review.sentiment == 'positif', 1), else_=0)).label('positive'),
-        func.sum(func.case((Review.sentiment == 'negatif', 1), else_=0)).label('negative')
+        func.sum(case((Review.sentiment == 'positif', 1), else_=0)).label('positive'),
+        func.sum(case((Review.sentiment == 'negatif', 1), else_=0)).label('negative')
     ).filter(Review.at.isnot(None))\
      .group_by(func.strftime('%Y-%m-%d', Review.at))\
      .order_by('date')\
