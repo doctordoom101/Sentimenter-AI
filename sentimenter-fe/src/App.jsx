@@ -121,33 +121,34 @@ const DashboardPage = () => {
     const [recentReviews, setRecentReviews] = useState([]);
     const [filter, setFilter] = useState("all");
 
-    useEffect(() => {
-        // Fetch KPI stats
+    // Scraper States
+    const [isScraping, setIsScraping] = useState(false);
+    const [scrapeCount, setScrapeCount] = useState(100);
+    const [scrapeResult, setScrapeResult] = useState(null);
+
+    const loadDashboardData = () => {
         fetch('/api/dashboard/kpi')
             .then(res => res.json())
             .then(data => setKpi(data))
             .catch(err => console.error("Error fetching KPI:", err));
 
-        // Fetch Sentiment Breakdown
         fetch('/api/dashboard/sentiment-breakdown')
             .then(res => res.json())
             .then(data => setBreakdown(data))
             .catch(err => console.error("Error fetching breakdown:", err));
 
-        // Fetch Trends
         fetch('/api/dashboard/trends')
             .then(res => res.json())
             .then(data => setTrends(data))
             .catch(err => console.error("Error fetching trends:", err));
 
-        // Fetch Topics
         fetch('/api/dashboard/top-topics')
             .then(res => res.json())
             .then(data => setTopics(data.slice(0, 4)))
             .catch(err => console.error("Error fetching topics:", err));
-    }, []);
+    };
 
-    useEffect(() => {
+    const fetchRecentReviews = () => {
         let url = '/api/reviews?limit=5';
         if (filter !== "all") {
             url += `&sentiment=${filter === "positive" ? "positif" : "negatif"}`;
@@ -156,19 +157,48 @@ const DashboardPage = () => {
             .then(res => res.json())
             .then(data => setRecentReviews(data.reviews))
             .catch(err => console.error("Error fetching reviews feed:", err));
+    };
+
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    useEffect(() => {
+        fetchRecentReviews();
     }, [filter]);
 
-    // Donut style
+    const handleScrapeRun = () => {
+        setIsScraping(true);
+        setScrapeResult(null);
+        fetch(`/api/scraper/run?count=${scrapeCount}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                setIsScraping(false);
+                if (data.status === "success") {
+                    setScrapeResult(data);
+                    loadDashboardData();
+                    fetchRecentReviews();
+                    setTimeout(() => setScrapeResult(null), 8000);
+                } else {
+                    alert("Gagal melakukan scraping: " + (data.detail || data.message));
+                }
+            })
+            .catch(err => {
+                setIsScraping(false);
+                alert("Terjadi kesalahan koneksi saat scraping.");
+                console.error(err);
+            });
+    };
+
     const donutStyle = {
         background: `conic-gradient(#6cf8bb 0% ${breakdown.positive}%, #f23d5c ${breakdown.positive}% ${breakdown.positive + breakdown.negative}%, #94a3b8 ${breakdown.positive + breakdown.negative}% 100%)`
     };
 
-    // Calculate dynamic SVG trends path
     const generateSvgPaths = () => {
         if (!trends || trends.length === 0) return { posPath: "", negPath: "" };
         const N = trends.length;
         const width = 1000;
-        const height = 120; // safe drawing height
+        const height = 120;
         const step = N > 1 ? width / (N - 1) : width;
         const maxVal = Math.max(...trends.map(t => Math.max(t.positive, t.negative)), 1);
 
@@ -196,6 +226,49 @@ const DashboardPage = () => {
             <Sidebar />
             <TopBar title="Dashboard" showSearch={false} />
             <main className="lg:ml-64 pt-24 px-lg pb-24 lg:pb-lg space-y-lg max-w-[1440px] mx-auto">
+                {/* Dashboard Header & Scraper Controls */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-outline-variant/30 pb-lg">
+                    <div>
+                        <h1 className="text-3xl font-bold font-plus-jakarta-sans text-on-surface">Dashboard</h1>
+                        <p className="text-on-surface-variant mt-1 text-xs">Sistem Analisis Sentimen Ulasan Aplikasi myBCA.</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <div className="flex items-center bg-white border border-outline-variant rounded-lg px-3 py-1.5 shadow-sm">
+                            <span className="text-xs text-on-surface-variant mr-2">Count:</span>
+                            <select 
+                                className="bg-transparent border-none text-xs font-bold text-primary focus:ring-0 cursor-pointer outline-none"
+                                value={scrapeCount}
+                                onChange={(e) => setScrapeCount(parseInt(e.target.value))}
+                                disabled={isScraping}
+                            >
+                                <option value={50}>50 ulasan</option>
+                                <option value={100}>100 ulasan</option>
+                                <option value={500}>500 ulasan</option>
+                                <option value={1000}>1000 ulasan</option>
+                            </select>
+                        </div>
+                        <button 
+                            onClick={handleScrapeRun}
+                            disabled={isScraping}
+                            className={`px-lg py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm transition-all ${isScraping ? 'bg-surface-container-high text-outline cursor-not-allowed' : 'bg-primary text-white hover:opacity-90'}`}
+                        >
+                            <span className={`material-symbols-outlined text-[16px] ${isScraping ? 'animate-spin' : ''}`}>sync</span>
+                            {isScraping ? "Scraping..." : "Tarik Ulasan Baru"}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Scrape Result Banner */}
+                {scrapeResult && (
+                    <div className="bg-secondary-container/20 border border-secondary text-on-secondary-container px-lg py-md rounded-xl flex items-center justify-between gap-sm transition-all duration-300">
+                        <div className="flex items-center gap-sm">
+                            <span className="material-symbols-outlined text-secondary text-xl">check_circle</span>
+                            <span className="text-xs font-bold">{scrapeResult.message}</span>
+                        </div>
+                        <button onClick={() => setScrapeResult(null)} className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer text-sm">close</button>
+                    </div>
+                )}
+
                 {/* KPI Cards */}
                 <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
                     <div className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0]">
