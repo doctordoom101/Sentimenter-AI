@@ -756,12 +756,18 @@ const AllReviewsPage = () => {
 
 const TopicsPage = () => {
     const [topics, setTopics] = useState([]);
+    const [keywordsData, setKeywordsData] = useState({ keywords: [], insight: "" });
 
     useEffect(() => {
         fetch('/api/dashboard/top-topics')
             .then(res => res.json())
             .then(data => setTopics(data))
             .catch(err => console.error("Error fetching topics:", err));
+
+        fetch('/api/dashboard/top-keywords')
+            .then(res => res.json())
+            .then(data => setKeywordsData(data))
+            .catch(err => console.error("Error fetching keywords:", err));
     }, []);
 
     const mostFrequent = topics.length > 0 ? topics[0].label : "N/A";
@@ -881,12 +887,13 @@ const TopicsPage = () => {
                             <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Stability (Selected)</p>
                         </div>
                         <div className="flex-1 flex flex-wrap content-start gap-sm">
-                            <span className="px-md py-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold rounded-lg text-lg">crash</span>
-                            <span className="px-sm py-xs bg-surface-container text-on-surface rounded-lg text-sm">login</span>
-                            <span className="px-lg py-md bg-error-container text-on-error-container font-extrabold rounded-xl text-xl">slow</span>
-                            <span className="px-md py-sm bg-surface-container text-on-surface rounded-lg text-md">timeout</span>
-                            <span className="px-sm py-xs bg-surface-container text-on-surface rounded-lg text-xs">transfer</span>
-                            <span className="px-md py-sm bg-secondary-container text-on-secondary-container font-bold rounded-lg text-lg">error</span>
+                            {keywordsData.keywords.length > 0 ? (
+                                keywordsData.keywords.map((kw, idx) => (
+                                    <span key={idx} className={kw.style}>{kw.word}</span>
+                                ))
+                            ) : (
+                                <span className="text-xs text-on-surface-variant">Loading keywords...</span>
+                            )}
                         </div>
                         <div className="mt-xl p-md bg-surface-container-low rounded-lg border border-outline-variant/30">
                             <div className="flex items-center gap-sm mb-xs">
@@ -894,7 +901,7 @@ const TopicsPage = () => {
                                 <span className="text-xs font-bold text-on-surface">Insight</span>
                             </div>
                             <p className="text-[12px] text-on-surface-variant leading-relaxed">
-                                Keluhan kata kunci <span className="font-bold text-on-tertiary-fixed-variant">"crash"</span> dan <span className="font-bold text-on-tertiary-fixed-variant">"slow"</span> paling sering ditemukan pada ulasan bersentimen negatif.
+                                {keywordsData.insight || "Loading insights..."}
                             </p>
                         </div>
                     </section>

@@ -4,6 +4,10 @@ from sqlalchemy import func, or_, case
 from app.core.database import get_db
 from app.models.review import Review
 from datetime import datetime
+from collections import Counter
+import string
+import re
+from app.services.ml_service import ml_service
 
 router = APIRouter()
 
@@ -100,3 +104,62 @@ def get_top_topics(db: Session = Depends(get_db)):
             
     topics_summary = sorted(topics_summary, key=lambda x: x["count"], reverse=True)
     return topics_summary
+
+@router.get("/top-keywords")
+def get_top_keywords(db: Session = Depends(get_db)):
+    reviews = db.query(Review.content, Review.sentiment).all()
+    
+    words_all = []
+    words_neg = []
+    
+    stop_words = ml_service.stop_words
+    
+    for content, sentiment in reviews:
+        if not content:
+            continue
+        # Fast clean (no stemming for speed)
+        text = content.lower()
+        text = re.sub(f"[{re.escape(string.punctuation)}]", " ", text)
+        text = re.sub(r"\d+", "", text)
+        
+        for word in text.split():
+            if word not in stop_words and len(word) > 3:
+                words_all.append(word)
+                if sentiment == 'negatif':
+                    words_neg.append(word)
+                    
+    most_common_all = Counter(words_all).most_common(6)
+    most_common_neg = Counter(words_neg).most_common(2)
+    
+    styles = [
+        "px-lg py-md bg-error-container text-on-error-container font-extrabold rounded-xl text-xl",
+        "px-md py-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold rounded-lg text-lg",
+        "px-md py-sm bg-secondary-container text-on-secondary-container font-bold rounded-lg text-lg",
+        "px-sm py-xs bg-surface-container text-on-surface rounded-lg text-sm",
+        "px-sm py-xs bg-surface-container text-on-surface rounded-lg text-sm",
+        "px-sm py-xs bg-surface-container text-on-surface rounded-lg text-xs"
+    ]
+    
+    keywords_data = []
+    for idx, (word, count) in enumerate(most_common_all):
+        style = styles[idx] if idx < len(styles) else "px-sm py-xs bg-surface-container text-on-surface rounded-lg text-xs"
+        keywords_data.append({
+            "word": word,
+            "count": count,
+            "style": style
+        })
+        
+    if len(most_common_neg) >= 2:
+        neg1 = most_common_neg[0][0]
+        neg2 = most_common_neg[1][0]
+        insight = f"Keluhan kata kunci '{neg1}' dan '{neg2}' paling sering ditemukan pada ulasan bersentimen negatif."
+    elif len(most_common_neg) == 1:
+        neg1 = most_common_neg[0][0]
+        insight = f"Keluhan kata kunci '{neg1}' paling mendominasi ulasan bersentimen negatif."
+    else:
+        insight = "Belum ditemukan kata kunci negatif yang signifikan pada ulasan."
+        
+    return {
+        "keywords": keywords_data,
+        "insight": insight
+    }
