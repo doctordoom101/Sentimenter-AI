@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc
 from app.core.database import get_db
 from app.models.review import Review
+from app.services.ml_service import ml_service
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
@@ -90,15 +91,7 @@ def get_review_ai_insights(review_id: str, db: Session = Depends(get_db)):
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
         
-    keyword_library = ["crash", "login", "update", "lemot", "lambat", "error", "bagus", "lancar", "membantu", "kecewa", "jelek", "oke", "tampilan", "transaksi", "transfer"]
-    detected = []
-    content_lower = review.content.lower()
-    for kw in keyword_library:
-        if kw in content_lower:
-            detected.append(kw)
-            
-    if not detected:
-        detected = ["ulasan"]
+    detected = ml_service.extract_keywords(review.content, top_n=3)
 
     if review.sentiment == "negatif":
         summary = "Pengguna menyatakan rasa kecewa atau mengalami kendala teknis/fungsionalitas aplikasi."
