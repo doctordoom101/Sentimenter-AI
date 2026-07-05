@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, case
 from app.core.database import get_db
 from app.models.review import Review
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import Counter
 import string
 import re
@@ -82,6 +82,17 @@ def get_top_topics(db: Session = Depends(get_db)):
         "App Crash": ["crash", "keluar sendiri", "force close", "fc", "mati", "error", "macet", "bug", "keluar"]
     }
     
+    # Get latest review date to determine relative periods
+    latest_review = db.query(Review.at).filter(Review.at.isnot(None)).order_by(desc(Review.at)).first()
+    if latest_review and latest_review[0]:
+        latest_date = latest_review[0]
+    else:
+        latest_date = datetime.utcnow()
+        
+    period_end = latest_date
+    period_mid = latest_date - timedelta(days=7)
+    period_start = latest_date - timedelta(days=14)
+    
     topics_summary = []
     
     for topic_name, keywords in topics_definitions.items():
@@ -93,12 +104,22 @@ def get_top_topics(db: Session = Depends(get_db)):
             positive_topic_reviews = query.filter(Review.sentiment == "positif").count()
             positive_percentage = int((positive_topic_reviews / total_topic_reviews) * 100)
             
+            # Calculate growth rate
+            current_count = query.filter(Review.at >= period_mid, Review.at <= period_end).count()
+            previous_count = query.filter(Review.at >= period_start, Review.at < period_mid).count()
+            
+            if previous_count > 0:
+                growth = int(((current_count - previous_count) / previous_count) * 100)
+            else:
+                growth = 100 if current_count > 0 else 0
+            
             color = "bg-secondary-container" if positive_percentage >= 50 else "bg-on-tertiary-container"
             
             topics_summary.append({
                 "label": topic_name,
                 "value": f"{positive_percentage}%",
                 "count": total_topic_reviews,
+                "growth": growth,
                 "color": color
             })
             

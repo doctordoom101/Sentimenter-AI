@@ -780,6 +780,14 @@ const TopicsPage = () => {
         topNegative = sortedByNeg[0].label;
         negativeVal = `${100 - parseInt(sortedByNeg[0].value)}%`;
     }
+    
+    let fastestGrowingTopic = "N/A";
+    let growthRate = 0;
+    if (topics.length > 0) {
+        const sortedByGrowth = [...topics].sort((a, b) => b.growth - a.growth);
+        fastestGrowingTopic = sortedByGrowth[0].label;
+        growthRate = sortedByGrowth[0].growth;
+    }
 
     return (
         <div className="min-h-screen">
@@ -810,9 +818,11 @@ const TopicsPage = () => {
                             <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Velocity</span>
                         </div>
                         <h3 className="text-xs font-bold text-on-surface-variant mb-xs">Fastest Growing</h3>
-                        <p className="text-xl font-bold font-plus-jakarta-sans text-on-surface">UI Feedback</p>
+                        <p className="text-xl font-bold font-plus-jakarta-sans text-on-surface">{fastestGrowingTopic}</p>
                         <div className="mt-4 flex items-center gap-xs">
-                            <span className="text-secondary font-bold text-sm">+18%</span>
+                            <span className={`${growthRate >= 0 ? "text-secondary" : "text-error"} font-bold text-sm`}>
+                                {growthRate >= 0 ? "+" : ""}{growthRate}%
+                            </span>
                             <span className="text-[10px] text-on-surface-variant">sejak minggu lalu</span>
                         </div>
                     </div>
@@ -884,7 +894,7 @@ const TopicsPage = () => {
                     <section className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-lg flex flex-col h-full">
                         <div className="mb-lg">
                             <h3 className="font-bold font-plus-jakarta-sans mb-xs">Top Keywords</h3>
-                            <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Stability (Selected)</p>
+                            <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Ulasan Keseluruhan</p>
                         </div>
                         <div className="flex-1 flex flex-wrap content-start gap-sm">
                             {keywordsData.keywords.length > 0 ? (
