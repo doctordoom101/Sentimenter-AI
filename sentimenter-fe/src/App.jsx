@@ -245,6 +245,7 @@ const DashboardPage = () => {
                                 <option value={100}>100 ulasan</option>
                                 <option value={500}>500 ulasan</option>
                                 <option value={1000}>1000 ulasan</option>
+                                <option value={-1}>Semua ulasan</option>
                             </select>
                         </div>
                         <button 

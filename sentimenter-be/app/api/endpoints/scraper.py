@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.review import Review
-from app.services.scraper import scrape_reviews_batch
+from app.services.scraper import scrape_reviews_batch, scrape_all_reviews
 from app.services.ml_service import ml_service
 from datetime import datetime
 
@@ -23,16 +23,15 @@ def parse_date(date_str):
 
 @router.post("/run")
 def run_scraper(
-    count: int = Query(100, ge=-1, le=1000, description="Jumlah ulasan yang ditarik. Gunakan -1 untuk mengambil semua (max 1000)"),
+    count: int = Query(100, ge=-1, description="Jumlah ulasan yang ditarik. Gunakan -1 untuk mengambil semua data"),
     db: Session = Depends(get_db)
 ):
     app_id = 'com.bca.mybca.omni.android'
     
     try:
         # Fetch reviews
-        if count == -1 or count > 1000:
-            # Cap at 1000 to prevent gateway timeouts
-            raw_reviews = scrape_reviews_batch(app_id, count=1000)
+        if count == -1:
+            raw_reviews = scrape_all_reviews(app_id)
         else:
             raw_reviews = scrape_reviews_batch(app_id, count=count)
             
