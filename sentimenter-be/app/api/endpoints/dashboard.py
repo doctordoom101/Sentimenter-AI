@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_, case
+from sqlalchemy import func, or_, case, desc
 from app.core.database import get_db
 from app.models.review import Review
 from datetime import datetime, timedelta
