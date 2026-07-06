@@ -829,8 +829,10 @@ const AllReviewsPage = () => {
 };
 
 const TopicsPage = () => {
+    const navigate = useNavigate();
     const [topics, setTopics] = useState([]);
     const [keywordsData, setKeywordsData] = useState({ keywords: [], insight: "" });
+    const [selectedTopic, setSelectedTopic] = useState(null);
 
     useEffect(() => {
         fetch('/api/dashboard/top-topics')
@@ -933,8 +935,13 @@ const TopicsPage = () => {
                                         topics.map((topic, i) => {
                                             const posVal = parseInt(topic.value);
                                             const negVal = 100 - posVal;
+                                            const isSelected = selectedTopic && selectedTopic.label === topic.label;
                                             return (
-                                                <tr key={i} className="hover:bg-surface-container-lowest transition-colors cursor-pointer">
+                                                <tr 
+                                                    key={i} 
+                                                    onClick={() => setSelectedTopic(topic)}
+                                                    className={`hover:bg-surface-container-lowest transition-colors cursor-pointer ${isSelected ? 'bg-primary-container/10 font-medium' : ''}`}
+                                                >
                                                     <td className="px-lg py-lg">
                                                         <div className="flex items-center gap-md">
                                                             <div className={`w-2 h-2 rounded-full ${topic.color === 'bg-secondary-container' ? 'bg-secondary' : 'bg-error'}`}></div>
@@ -990,6 +997,47 @@ const TopicsPage = () => {
                         </div>
                     </section>
                 </div>
+
+                {/* Topic Reviews List */}
+                {selectedTopic && (
+                    <section className="mt-xl bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-lg">
+                        <div className="flex justify-between items-center border-b border-outline-variant pb-md mb-lg">
+                            <div>
+                                <h3 className="font-bold font-plus-jakarta-sans text-lg text-primary">Reviews for: {selectedTopic.label}</h3>
+                                <p className="text-[11px] text-on-surface-variant mt-1">Ditemukan {selectedTopic.reviews ? selectedTopic.reviews.length : 0} ulasan yang berkaitan dengan topik ini.</p>
+                            </div>
+                            <button onClick={() => setSelectedTopic(null)} className="material-symbols-outlined hover:text-primary cursor-pointer text-xl text-on-surface-variant">close</button>
+                        </div>
+                        <div className="space-y-md max-h-[500px] overflow-y-auto pr-sm scrollbar-thin">
+                            {selectedTopic.reviews && selectedTopic.reviews.length > 0 ? (
+                                selectedTopic.reviews.map((r, idx) => (
+                                    <div key={r.review_id || idx} className="p-md rounded-lg bg-surface-container-low/50 border border-outline-variant hover:border-primary/50 transition-all flex flex-col md:flex-row md:items-start justify-between gap-md">
+                                        <div className="flex-1 space-y-2">
+                                            <div className="flex items-center gap-xs">
+                                                <span className="text-xs font-bold text-on-surface">{r.user_name || "Anonymous"}</span>
+                                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${r.sentiment === 'positif' ? 'bg-secondary-container/20 text-on-secondary-container' : r.sentiment === 'negatif' ? 'bg-error-container text-on-error-container' : 'bg-surface-container-high text-on-surface-variant'}`}>{r.sentiment}</span>
+                                            </div>
+                                            <p className="text-xs text-on-surface-variant leading-relaxed">{r.content}</p>
+                                            <div className="text-[10px] text-outline">
+                                                Tanggal: {r.at ? new Date(r.at).toLocaleDateString() : "N/A"}
+                                            </div>
+                                        </div>
+                                        <div className="flex md:flex-col items-end justify-between md:justify-start gap-sm">
+                                            <div className="flex text-secondary-container">
+                                                {Array.from({ length: 5 }).map((_, sIdx) => (
+                                                    <span key={sIdx} className="material-symbols-outlined text-[14px]" style={{fontVariationSettings: sIdx < r.score ? "'FILL' 1" : "'FILL' 0"}}>star</span>
+                                                ))}
+                                            </div>
+                                            <button onClick={() => navigate(`/review-detail/${r.review_id}`)} className="px-3 py-1.5 border border-outline-variant hover:border-primary hover:text-primary rounded-md text-[9px] font-bold transition-all uppercase tracking-wider">Details</button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-on-surface-variant italic">Tidak ada ulasan detail untuk topik ini.</p>
+                            )}
+                        </div>
+                    </section>
+                )}
             </main>
             <MobileNav />
         </div>

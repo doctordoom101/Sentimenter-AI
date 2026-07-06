@@ -149,12 +149,25 @@ def get_top_topics(db: Session = Depends(get_db)):
             
         color = "bg-secondary-container" if positive_percentage >= 50 else "bg-on-tertiary-container"
         
+        serialized_reviews = []
+        for r in r_list:
+            serialized_reviews.append({
+                "review_id": r.review_id,
+                "user_name": r.user_name,
+                "user_image": r.user_image,
+                "content": r.content,
+                "score": r.score,
+                "sentiment": r.sentiment,
+                "at": r.at.isoformat() if r.at else None
+            })
+            
         topics_summary.append({
             "label": topic_labels[topic_idx],
             "value": f"{positive_percentage}%",
             "count": count,
             "growth": growth,
-            "color": color
+            "color": color,
+            "reviews": serialized_reviews
         })
         
     # Sort topics by volume
