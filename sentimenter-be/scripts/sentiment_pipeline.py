@@ -10,17 +10,29 @@ from nltk.corpus import stopwords
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, accuracy_score
 
 # Download NLTK stopwords if not available
 nltk.download('stopwords', quiet=True)
 
-# Instantiate Sastrawi stemmer globally to speed up preprocessing (MASSIVE SPEEDUP)
+# Negation words to KEEP in sentiment context
+negation_words = {'tidak', 'kurang', 'bukan', 'belum', 'jangan', 'tidaklah', 'tanpa', 'ga', 'gak', 'gk', 'gbs'}
+stop_words = set(stopwords.words('indonesian')) - negation_words
+
 print("Menginisialisasi Sastrawi Stemmer...")
 factory = StemmerFactory()
 stemmer = factory.create_stemmer()
-stop_words = set(stopwords.words('indonesian'))
+
+# Indonesian internet slang dictionary
+slang_dict = {
+    "ga": "tidak", "gak": "tidak", "gk": "tidak", "dgn": "dengan", "yg": "yang", 
+    "bgt": "banget", "lemot": "lambat", "gbs": "tidak bisa", "error": "salah", 
+    "klo": "kalau", "kl": "kalau", "tp": "tetapi", "tpi": "tetapi", "sdh": "sudah",
+    "dah": "sudah", "bca": "bank", "app": "aplikasi", "apk": "aplikasi",
+    "krn": "karena", "karna": "karena", "nyesel": "menyesal", "kecewa": "kecewa",
+    "jelek": "buruk", "ok": "oke", "sip": "oke", "mantap": "bagus", "top": "bagus"
+}
 
 def label_sentiment(score):
     if score <= 2:
@@ -48,17 +60,18 @@ def preprocess_text(text):
     text = text.strip()
     text = re.sub(r'\s+', ' ', text)
     
-    # 5. Stopword removal (Indonesian)
     words = text.split()
-    words = [word for word in words if word not in stop_words]
-    
-    # 6. Stemming (Sastrawi) using global stemmer
-    stemmed_words = [stemmer.stem(word) for word in words]
+    # 5. Normalize slang
+    normalized_words = [slang_dict.get(word, word) for word in words]
+    # 6. Stopword removal (keeping negations)
+    filtered_words = [word for word in normalized_words if word not in stop_words]
+    # 7. Stemming (Sastrawi) using global stemmer
+    stemmed_words = [stemmer.stem(word) for word in filtered_words]
     
     return " ".join(stemmed_words)
 
 def main():
-    print("Mulai proses Pipeline Sentimen...")
+    print("Mulai proses Pipeline Sentimen Baru (Logistic Regression - Optimasi Distribusi)...")
     
     # Base directory
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -97,8 +110,7 @@ def main():
     df['sentiment'] = df['score'].apply(label_sentiment)
     
     # 3. Text Preprocessing
-    print("Memulai preprocessing teks (menggunakan Sastrawi yang telah dioptimalkan)...")
-    # Drop missing reviews
+    print("Memulai preprocessing teks (menggunakan Sastrawi yang dioptimalkan + slang normalization)...")
     df = df.dropna(subset=['content'])
     df['cleaned_content'] = df['content'].apply(preprocess_text)
     
@@ -110,39 +122,23 @@ def main():
     X = df['cleaned_content']
     y = df['sentiment']
     
+    # Stratified split to ensure proportion is kept
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
     
-    # Handle Class Imbalance using simple pandas random oversampling on training set
-    print("Menyeimbangkan sebaran kelas data training (Oversampling)...")
-    train_df = pd.DataFrame({'content': X_train, 'sentiment': y_train})
-    max_size = train_df['sentiment'].value_counts().max()
-    balanced_chunks = []
-    for class_label, group in train_df.groupby('sentiment'):
-        if len(group) < max_size:
-            # Oversample minority class
-            oversampled_group = group.sample(max_size, replace=True, random_state=42)
-            balanced_chunks.append(oversampled_group)
-        else:
-            balanced_chunks.append(group)
-    
-    train_df_balanced = pd.concat(balanced_chunks)
-    X_train_balanced = train_df_balanced['content']
-    y_train_balanced = train_df_balanced['sentiment']
-    
-    print(f"Sebaran kelas setelah penyeimbangan:")
-    print(y_train_balanced.value_counts())
+    print(f"Sebaran kelas data training:")
+    print(y_train.value_counts())
 
     # 5. TF-IDF Vectorization
-    print("Mengekstraksi fitur dengan TF-IDF (Unigram + Bigram)...")
-    # Menggunakan ngram_range=(1, 2) untuk menangkap konteks gabungan kata (misal: "tidak bisa")
-    vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2), min_df=2)
-    X_train_vec = vectorizer.fit_transform(X_train_balanced)
+    print("Mengekstraksi fitur dengan TF-IDF (Unigram + Bigram + Sublinear TF)...")
+    # sublinear_tf=True membantu mengurangi bias ulasan yang sangat panjang
+    vectorizer = TfidfVectorizer(max_features=12000, ngram_range=(1, 2), min_df=2, sublinear_tf=True)
+    X_train_vec = vectorizer.fit_transform(X_train)
     X_test_vec = vectorizer.transform(X_test)
     
     # 6. Modeling
-    print("Melatih model Naive Bayes...")
-    model = MultinomialNB(alpha=0.1) # Tuning alpha to 0.1 for better sensitivity
-    model.fit(X_train_vec, y_train_balanced)
+    print("Melatih model Logistic Regression...")
+    model = LogisticRegression(C=2.0, max_iter=1000, random_state=42)
+    model.fit(X_train_vec, y_train)
     
     # 7. Evaluation
     print("Mengevaluasi model...")

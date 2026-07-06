@@ -9,6 +9,18 @@ from nltk.corpus import stopwords
 # Ensure stopwords are downloaded
 nltk.download('stopwords', quiet=True)
 
+# Negation words to KEEP in sentiment context
+negation_words = {'tidak', 'kurang', 'bukan', 'belum', 'jangan', 'tidaklah', 'tanpa', 'ga', 'gak', 'gk', 'gbs'}
+
+slang_dict = {
+    "ga": "tidak", "gak": "tidak", "gk": "tidak", "dgn": "dengan", "yg": "yang", 
+    "bgt": "banget", "lemot": "lambat", "gbs": "tidak bisa", "error": "salah", 
+    "klo": "kalau", "kl": "kalau", "tp": "tetapi", "tpi": "tetapi", "sdh": "sudah",
+    "dah": "sudah", "bca": "bank", "app": "aplikasi", "apk": "aplikasi",
+    "krn": "karena", "karna": "karena", "nyesel": "menyesal", "kecewa": "kecewa",
+    "jelek": "buruk", "ok": "oke", "sip": "oke", "mantap": "bagus", "top": "bagus"
+}
+
 class MLService:
     def __init__(self):
         # Determine the base directory (sentimenter-be)
@@ -21,7 +33,7 @@ class MLService:
         
         factory = StemmerFactory()
         self.stemmer = factory.create_stemmer()
-        self.stop_words = set(stopwords.words('indonesian'))
+        self.stop_words = set(stopwords.words('indonesian')) - negation_words
 
     def preprocess_text(self, text: str) -> str:
         if not isinstance(text, str):
@@ -35,10 +47,11 @@ class MLService:
         text = re.sub(r'\s+', ' ', text)
         
         words = text.split()
-        words = [word for word in words if word not in self.stop_words]
+        normalized_words = [slang_dict.get(word, word) for word in words]
+        filtered_words = [word for word in normalized_words if word not in self.stop_words]
         
         # Stemming
-        stemmed_words = [self.stemmer.stem(word) for word in words]
+        stemmed_words = [self.stemmer.stem(word) for word in filtered_words]
         return " ".join(stemmed_words)
 
     def predict(self, text: str):
