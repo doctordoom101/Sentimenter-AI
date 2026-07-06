@@ -1,41 +1,38 @@
 # Laporan Evaluasi Model Sentimen
 
 ## Deskripsi
-Dokumen ini merangkum proses pelatihan dan hasil evaluasi model *Machine Learning* untuk klasifikasi sentimen ulasan aplikasi "myBCA". Model ini dilatih untuk mengklasifikasikan teks ulasan ke dalam tiga kategori sentimen: `positif`, `netral`, dan `negatif`.
+Dokumen ini merangkum hasil pelatihan ulang (*retraining*) dan evaluasi model *Machine Learning* untuk klasifikasi sentimen ulasan aplikasi "myBCA". Model ini dilatih menggunakan data riil yang ditarik dari database SQLite (hasil scraping dinamis dari Google Play Store).
 
 ## Metodologi
-- **Algoritma Model**: Naive Bayes (`MultinomialNB`)
-- **Ekstraksi Fitur**: TF-IDF (*Term Frequency-Inverse Document Frequency*) dengan maksimum 5000 fitur teks.
+- **Algoritma Model**: Naive Bayes (`MultinomialNB` dengan tuning `alpha=0.1`)
+- **Ekstraksi Fitur**: TF-IDF (*Term Frequency-Inverse Document Frequency*) dengan maksimum 10.000 fitur teks menggunakan gabungan kata **Unigram + Bigram** (`ngram_range=(1, 2)`) untuk menangkap konteks negasi (seperti "tidak bisa").
+- **Penyeimbangan Kelas**: Menerapkan teknik **Random Oversampling** di tingkat *training data* untuk mengatasi *data imbalance* (ketidakseimbangan jumlah ulasan positif, negatif, dan netral).
 - **Tahapan Preprocessing**: 
   - *Case folding* (huruf kecil).
   - Pembersihan tanda baca, angka, dan tautan (URL).
   - Penghapusan *Stopword* bahasa Indonesia (NLTK).
-  - *Stemming* menggunakan Sastrawi untuk menormalkan kata berimbuhan menjadi kata dasar.
-- **Data Splitting**: 80% untuk *Training* dan 20% untuk *Testing* dengan stratifikasi agar sebaran data proporsional.
+  - *Stemming* menggunakan Sastrawi yang telah dioptimalkan secara global (10-50x lebih cepat).
+- **Data Splitting**: 80% untuk *Training* dan 20% untuk *Testing* dengan stratifikasi sebaran kelas.
 
 ## Hasil Pengujian (Testing)
-Model dievaluasi menggunakan *testing data* sebanyak **196 sampel**.
+Model dievaluasi menggunakan *testing data* sebanyak **7.088 ulasan** (dari total dataset sebanyak **36.125 ulasan**).
 
-- **Akurasi Keseluruhan (Accuracy)**: **77.04%**
+- **Akurasi Keseluruhan (Accuracy)**: **75.40%**
 
 ### Classification Report
 | Sentimen | Precision | Recall | F1-Score | Support (Jumlah Sampel) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Negatif** | 0.72 | 0.95 | 0.82 | 103 |
-| **Netral** | 0.00 | 0.00 | 0.00 | 18 |
-| **Positif** | 0.90 | 0.71 | 0.79 | 75 |
+| **Negatif** | 0.77 | 0.80 | 0.79 | 3,180 |
+| **Netral** | 0.21 | 0.34 | 0.26 | 564 |
+| **Positif** | 0.91 | 0.78 | 0.84 | 3,344 |
 
 ## Analisis & Temuan
-1. **Performa Mayoritas Kelas**: Dengan akurasi mencapai ~77%, model sudah tergolong baik dalam membedakan dua sentimen dominan (Positif dan Negatif). Presisi model dalam mendeteksi sentimen **Positif** mencapai **90%**, dan tingkat temuan (*Recall*) untuk sentimen **Negatif** menyentuh angka **95%**.
-2. **Ketidakseimbangan Data (Data Imbalance)**: 
-   - Model sama sekali gagal mendeteksi kelas **Netral** (mendapat skor 0 pada presisi dan *recall*).
-   - Masalah ini terjadi karena dataset sangat tidak seimbang; jumlah data berlabel Netral hanya 18 (sangat sedikit dibanding kelas lain). Naive Bayes memprioritaskan probabilitas tertinggi sehingga "mengorbankan" kelas minoritas tersebut.
-
-## Rekomendasi Perbaikan (*Future Work*)
-Untuk meningkatkan performa model di iterasi selanjutnya, beberapa langkah berikut disarankan:
-- **Penambahan Data (Data Augmentation)**: Mengumpulkan dan melabeli lebih banyak ulasan netral agar representasi datanya cukup.
-- **Handling Imbalance**: Menerapkan teknik *Oversampling* (seperti SMOTE) atau menggunakan fungsi bobot (class_weight) pada algoritma yang mendukung.
-- **Eksplorasi Algoritma**: Menguji menggunakan model yang lebih kuat menangani ketidakseimbangan, seperti Random Forest, SVM, atau bahkan model *Deep Learning* berbasis Transformer (misalnya IndoBERT).
+1. **Peningkatan Performa Kelas Minoritas (Netral)**:
+   - Pada model sebelumnya, skor F1 untuk kelas **Netral** adalah **0.00** karena ketidakseimbangan data yang ekstrem (model mengabaikan kelas minoritas).
+   - Dengan penerapan *Random Oversampling* pada data latih, kelas **Netral** sekarang berhasil dikenali dengan F1-Score **0.26** (Precision 21%, Recall 34%). Ini merupakan perbaikan krusialis.
+2. **Kekuatan Deteksi Sentimen Utama**:
+   - Model memiliki performa yang sangat kokoh dalam membedakan kelas **Negatif** (F1-Score **0.79**) dan kelas **Positif** (F1-Score **0.84**).
+   - Presisi untuk kelas **Positif** menyentuh **91%**, yang berarti ulasan positif diklasifikasikan dengan keakuratan sangat tinggi.
 
 ## Lokasi File Artefak
 - **Pipeline Script**: `scripts/sentiment_pipeline.py`
