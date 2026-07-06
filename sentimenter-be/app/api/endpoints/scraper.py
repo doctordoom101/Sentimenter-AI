@@ -44,15 +44,17 @@ def run_scraper(
                 "message": "Tidak ada ulasan baru yang ditemukan di Play Store."
             }
             
+        # Fetch all existing review IDs from the database to perform O(1) in-memory lookups
+        existing_ids = set(r[0] for r in db.query(Review.review_id).all())
+        
         added_count = 0
         skipped_count = 0
         reviews_to_save = []
         
         for r in raw_reviews:
             review_id = str(r['reviewId'])
-            # Check duplicate in database
-            exists = db.query(Review.review_id).filter(Review.review_id == review_id).first()
-            if exists:
+            # Check duplicate in-memory
+            if review_id in existing_ids:
                 skipped_count += 1
                 continue
                 
