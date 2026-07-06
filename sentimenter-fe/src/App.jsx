@@ -467,8 +467,6 @@ const ReviewDetailPage = () => {
     const navigate = useNavigate();
     const [review, setReview] = useState(null);
     const [insights, setInsights] = useState(null);
-    const [replyText, setReplyText] = useState("");
-    const [showReplyForm, setShowReplyForm] = useState(false);
 
     const fetchReviewDetails = () => {
         if (!id) return;
@@ -490,22 +488,7 @@ const ReviewDetailPage = () => {
         fetchReviewDetails();
     }, [id]);
 
-    const handleReplySubmit = (e) => {
-        e.preventDefault();
-        if (!replyText.trim()) return;
-        fetch(`/api/reviews/${id}/reply`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reply_content: replyText })
-        })
-        .then(res => res.json())
-        .then(data => {
-            setReview(data);
-            setReplyText("");
-            setShowReplyForm(false);
-        })
-        .catch(err => console.error(err));
-    };
+
 
     const handleResolve = () => {
         fetch(`/api/reviews/${id}/resolve`, { method: 'POST' })
@@ -555,18 +538,7 @@ const ReviewDetailPage = () => {
                                 {review.content}
                             </p>
 
-                            {review.reply_content && (
-                                <div className="mt-lg p-md bg-surface-container-low rounded-lg border border-outline-variant/30">
-                                    <div className="flex items-center gap-xs mb-xs text-xs font-bold text-primary">
-                                        <span className="material-symbols-outlined text-[16px]">reply</span>
-                                        <span>Balasan Anda</span>
-                                    </div>
-                                    <p className="text-sm text-on-surface-variant">{review.reply_content}</p>
-                                    <span className="text-[9px] text-outline font-bold block mt-sm">
-                                        {review.replied_at ? new Date(review.replied_at).toLocaleString() : ""}
-                                    </span>
-                                </div>
-                            )}
+
 
                             <div className="mt-xl pt-lg border-t border-outline-variant flex flex-wrap gap-xl text-on-surface-variant">
                                 <div className="flex items-center gap-sm">
@@ -586,39 +558,14 @@ const ReviewDetailPage = () => {
                             </div>
                         </div>
 
-                        {showReplyForm ? (
-                            <form onSubmit={handleReplySubmit} className="bg-white rounded-xl border border-outline-variant p-lg space-y-md shadow-sm">
-                                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Tulis Balasan</label>
-                                <textarea 
-                                    className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-md text-sm"
-                                    rows="4"
-                                    placeholder="Ketik balasan Anda ke Play Store..."
-                                    value={replyText}
-                                    onChange={(e) => setReplyText(e.target.value)}
-                                    required
-                                />
-                                <div className="flex gap-2">
-                                    <button type="submit" className="bg-primary text-white px-md py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-opacity">
-                                        Kirim Balasan
-                                    </button>
-                                    <button type="button" onClick={() => setShowReplyForm(false)} className="bg-white border border-outline-variant text-primary px-md py-2 rounded-lg text-xs font-bold hover:bg-surface-container-low transition-colors">
-                                        Batal
-                                    </button>
-                                </div>
-                            </form>
-                        ) : (
-                            <div className="flex flex-wrap gap-md">
-                                <button onClick={() => setShowReplyForm(true)} className="bg-primary text-white px-lg py-3 rounded-lg text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm">
-                                    <span className="material-symbols-outlined">reply</span> Reply to User
-                                </button>
-                                <button onClick={handleResolve} disabled={review.resolved} className={`px-lg py-3 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${review.resolved ? "bg-surface-container-high text-outline cursor-not-allowed" : "bg-white border border-outline-variant text-primary hover:bg-surface-container-low"}`}>
-                                    <span className="material-symbols-outlined">check_circle</span> {review.resolved ? "Resolved" : "Mark Resolved"}
-                                </button>
-                                <button onClick={handleFlag} disabled={review.flagged} className={`px-lg py-3 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${review.flagged ? "bg-error-container/30 text-on-error-container cursor-not-allowed" : "bg-white border border-outline-variant text-on-tertiary-container hover:bg-error-container/10"}`}>
-                                    <span className="material-symbols-outlined">flag</span> {review.flagged ? "Flagged" : "Flag Team"}
-                                </button>
-                            </div>
-                        )}
+                        <div className="flex flex-wrap gap-md">
+                            <button onClick={handleResolve} disabled={review.resolved} className={`px-lg py-3 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${review.resolved ? "bg-surface-container-high text-outline cursor-not-allowed" : "bg-white border border-outline-variant text-primary hover:bg-surface-container-low"}`}>
+                                <span className="material-symbols-outlined">check_circle</span> {review.resolved ? "Resolved" : "Mark Resolved"}
+                            </button>
+                            <button onClick={handleFlag} disabled={review.flagged} className={`px-lg py-3 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${review.flagged ? "bg-error-container/30 text-on-error-container cursor-not-allowed" : "bg-white border border-outline-variant text-on-tertiary-container hover:bg-error-container/10"}`}>
+                                <span className="material-symbols-outlined">flag</span> {review.flagged ? "Flagged" : "Flag Team"}
+                            </button>
+                        </div>
                     </div>
                     <div className="lg:col-span-4 space-y-gutter">
                         <div className="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">

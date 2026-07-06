@@ -42,8 +42,7 @@ class AIInsightResponse(BaseModel):
     summary: str
     confidence: int
 
-class ReplyRequest(BaseModel):
-    reply_content: str
+
 
 @router.get("", response_model=PaginatedReviews)
 def get_reviews(
@@ -106,17 +105,7 @@ def get_review_ai_insights(review_id: str, db: Session = Depends(get_db)):
         "confidence": int(review.confidence * 100) if review.confidence <= 1.0 else int(review.confidence)
     }
 
-@router.post("/{review_id}/reply", response_model=ReviewBase)
-def reply_to_review(review_id: str, payload: ReplyRequest, db: Session = Depends(get_db)):
-    review = db.query(Review).filter(Review.review_id == review_id).first()
-    if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
-        
-    review.reply_content = payload.reply_content
-    review.replied_at = datetime.utcnow()
-    db.commit()
-    db.refresh(review)
-    return review
+
 
 @router.post("/{review_id}/resolve", response_model=ReviewBase)
 def mark_review_resolved(review_id: str, db: Session = Depends(get_db)):
