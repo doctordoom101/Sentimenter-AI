@@ -4,6 +4,8 @@ from sqlalchemy import func, or_, case, desc
 from app.core.database import get_db
 from app.models.review import Review
 from datetime import datetime, timedelta
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
 from collections import Counter
 import string
 import re
@@ -75,54 +77,87 @@ def get_sentiment_trends(db: Session = Depends(get_db)):
 
 @router.get("/top-topics")
 def get_top_topics(db: Session = Depends(get_db)):
-    topics_definitions = {
-        "Fast Loading": ["cepat", "kencang", "lancar", "loading", "buka", "speed", "fast"],
-        "UI Feedback": ["tampilan", "ui", "desain", "warna", "menu", "layout", "tema", "bagus", "cantik"],
-        "Login Issue": ["login", "masuk", "gagal masuk", "otp", "verifikasi", "password", "sandi", "error login"],
-        "App Crash": ["crash", "keluar sendiri", "force close", "fc", "mati", "error", "macet", "bug", "keluar"]
-    }
+    # Fetch recent reviews to prevent performance issues with fitting LDA
+    # We take the 2000 most recent reviews containing text
+    reviews = db.query(Review).filter(Review.content.isnot(None)).order_by(desc(Review.at)).limit(2000).all()
     
-    # Get latest review date to determine relative periods
-    latest_review = db.query(Review.at).filter(Review.at.isnot(None)).order_by(desc(Review.at)).first()
-    if latest_review and latest_review[0]:
-        latest_date = latest_review[0]
-    else:
-        latest_date = datetime.utcnow()
+    if not reviews:
+        return []
         
+    latest_date = reviews[0].at if reviews[0].at else datetime.utcnow()
     period_end = latest_date
     period_mid = latest_date - timedelta(days=7)
     period_start = latest_date - timedelta(days=14)
     
-    topics_summary = []
-    
-    for topic_name, keywords in topics_definitions.items():
-        conditions = [Review.content.ilike(f"%{kw}%") for kw in keywords]
-        query = db.query(Review).filter(or_(*conditions))
-        total_topic_reviews = query.count()
+    # Preprocess texts using ml_service
+    documents = []
+    valid_reviews = []
+    for r in reviews:
+        cleaned = ml_service.preprocess_text(r.content)
+        if cleaned:
+            documents.append(cleaned)
+            valid_reviews.append(r)
+            
+    if not documents:
+        return []
         
-        if total_topic_reviews > 0:
-            positive_topic_reviews = query.filter(Review.sentiment == "positif").count()
-            positive_percentage = int((positive_topic_reviews / total_topic_reviews) * 100)
+    # Fit CountVectorizer (better for LDA than TF-IDF)
+    vectorizer = CountVectorizer(max_features=1500, max_df=0.90, min_df=2)
+    tf = vectorizer.fit_transform(documents)
+    
+    # Run Latent Dirichlet Allocation (LDA) to extract 4 topics
+    n_topics = 4
+    lda = LatentDirichletAllocation(n_components=n_topics, random_state=42, max_iter=5, n_jobs=-1)
+    lda.fit(tf)
+    
+    # Get topic labels from top words
+    feature_names = vectorizer.get_feature_names_out()
+    topic_labels = {}
+    for topic_idx, topic in enumerate(lda.components_):
+        top_words_idx = topic.argsort()[:-4:-1] # top 3 words
+        top_words = [feature_names[i] for i in top_words_idx]
+        # Capitalize words and format as "Word1 / Word2 / Word3"
+        topic_labels[topic_idx] = " / ".join([w.capitalize() for w in top_words])
+        
+    # Document-topic distribution
+    doc_topic_dist = lda.transform(tf)
+    
+    # Classify reviews by dominant topic
+    topic_reviews = {i: [] for i in range(n_topics)}
+    for doc_idx, r in enumerate(valid_reviews):
+        dominant_topic = doc_topic_dist[doc_idx].argmax()
+        topic_reviews[dominant_topic].append(r)
+        
+    # Build topics summary
+    topics_summary = []
+    for topic_idx, r_list in topic_reviews.items():
+        count = len(r_list)
+        if count == 0:
+            continue
             
-            # Calculate growth rate
-            current_count = query.filter(Review.at >= period_mid, Review.at <= period_end).count()
-            previous_count = query.filter(Review.at >= period_start, Review.at < period_mid).count()
+        pos_count = sum(1 for r in r_list if r.sentiment == "positif")
+        positive_percentage = int((pos_count / count) * 100)
+        
+        # Calculate growth rate (current 7 days vs previous 7 days)
+        current_count = sum(1 for r in r_list if r.at and period_mid <= r.at <= period_end)
+        previous_count = sum(1 for r in r_list if r.at and period_start <= r.at < period_mid)
+        
+        if previous_count > 0:
+            growth = int(((current_count - previous_count) / previous_count) * 100)
+        else:
+            growth = 100 if current_count > 0 else 0
             
-            if previous_count > 0:
-                growth = int(((current_count - previous_count) / previous_count) * 100)
-            else:
-                growth = 100 if current_count > 0 else 0
-            
-            color = "bg-secondary-container" if positive_percentage >= 50 else "bg-on-tertiary-container"
-            
-            topics_summary.append({
-                "label": topic_name,
-                "value": f"{positive_percentage}%",
-                "count": total_topic_reviews,
-                "growth": growth,
-                "color": color
-            })
-            
+        color = "bg-secondary-container" if positive_percentage >= 50 else "bg-on-tertiary-container"
+        
+        topics_summary.append({
+            "label": topic_labels[topic_idx],
+            "value": f"{positive_percentage}%",
+            "count": count,
+            "growth": growth,
+            "color": color
+        })
+        
+    # Sort topics by volume
     topics_summary = sorted(topics_summary, key=lambda x: x["count"], reverse=True)
     return topics_summary
 
