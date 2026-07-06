@@ -150,8 +150,14 @@ const DashboardPage = () => {
 
     const fetchRecentReviews = () => {
         let url = '/api/reviews?limit=5';
-        if (filter !== "all") {
-            url += `&sentiment=${filter === "positive" ? "positif" : "negatif"}`;
+        if (filter === "positive") {
+            url += '&sentiment=positif';
+        } else if (filter === "negative") {
+            url += '&sentiment=negatif';
+        } else if (filter === "resolved") {
+            url += '&resolved=true';
+        } else if (filter === "flagged") {
+            url += '&flagged=true';
         }
         fetch(url)
             .then(res => res.json())
@@ -412,6 +418,8 @@ const DashboardPage = () => {
                                 <button onClick={() => setFilter("all")} className={`px-md py-xs rounded-md text-xs font-bold ${filter === "all" ? "bg-white shadow-sm text-primary" : "text-on-surface-variant hover:text-primary transition-colors"}`}>All</button>
                                 <button onClick={() => setFilter("positive")} className={`px-md py-xs rounded-md text-xs font-bold ${filter === "positive" ? "bg-white shadow-sm text-primary" : "text-on-surface-variant hover:text-primary transition-colors"}`}>Positive</button>
                                 <button onClick={() => setFilter("negative")} className={`px-md py-xs rounded-md text-xs font-bold ${filter === "negative" ? "bg-white shadow-sm text-primary" : "text-on-surface-variant hover:text-primary transition-colors"}`}>Negative</button>
+                                <button onClick={() => setFilter("resolved")} className={`px-md py-xs rounded-md text-xs font-bold ${filter === "resolved" ? "bg-white shadow-sm text-primary" : "text-on-surface-variant hover:text-primary transition-colors"}`}>Resolved</button>
+                                <button onClick={() => setFilter("flagged")} className={`px-md py-xs rounded-md text-xs font-bold ${filter === "flagged" ? "bg-white shadow-sm text-primary" : "text-on-surface-variant hover:text-primary transition-colors"}`}>Flagged</button>
                             </div>
                         </div>
                         <div className="space-y-md">
@@ -441,9 +449,21 @@ const DashboardPage = () => {
                                         </div>
                                         <p className="text-sm text-on-surface mb-sm line-clamp-2">{review.content}</p>
                                         <div className="flex justify-between items-center">
-                                            <span className={`px-sm py-[2px] rounded-full text-[10px] font-bold tracking-wider uppercase ${review.sentiment === 'positif' ? 'bg-secondary-container/10 text-on-secondary-container' : review.sentiment === 'negatif' ? 'bg-error-container text-on-error-container' : 'bg-surface-container-high text-on-surface-variant'}`}>
-                                                {review.sentiment}
-                                            </span>
+                                            <div className="flex gap-2">
+                                                <span className={`px-sm py-[2px] rounded-full text-[10px] font-bold tracking-wider uppercase ${review.sentiment === 'positif' ? 'bg-secondary-container/10 text-on-secondary-container' : review.sentiment === 'negatif' ? 'bg-error-container text-on-error-container' : 'bg-surface-container-high text-on-surface-variant'}`}>
+                                                    {review.sentiment}
+                                                </span>
+                                                {review.resolved && (
+                                                    <span className="px-sm py-[2px] rounded-full text-[10px] font-bold tracking-wider uppercase bg-secondary/10 text-secondary flex items-center gap-0.5">
+                                                        <span className="material-symbols-outlined text-[10px]">check_circle</span> Resolved
+                                                    </span>
+                                                )}
+                                                {review.flagged && (
+                                                    <span className="px-sm py-[2px] rounded-full text-[10px] font-bold tracking-wider uppercase bg-error-container text-on-error-container flex items-center gap-0.5">
+                                                        <span className="material-symbols-outlined text-[10px]">flag</span> Flagged
+                                                    </span>
+                                                )}
+                                            </div>
                                             <button className="opacity-0 group-hover:opacity-100 transition-opacity text-primary text-xs font-bold flex items-center">
                                                 Detail <span className="material-symbols-outlined text-[16px] ml-xs">arrow_forward</span>
                                             </button>
