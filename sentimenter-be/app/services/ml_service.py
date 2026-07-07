@@ -35,7 +35,7 @@ class MLService:
         self.stemmer = factory.create_stemmer()
         self.stop_words = set(stopwords.words('indonesian')) - negation_words
 
-    def preprocess_text(self, text: str) -> str:
+    def preprocess_text(self, text: str, use_stemming: bool = True) -> str:
         if not isinstance(text, str):
             return ""
         
@@ -50,6 +50,9 @@ class MLService:
         normalized_words = [slang_dict.get(word, word) for word in words]
         filtered_words = [word for word in normalized_words if word not in self.stop_words]
         
+        if not use_stemming:
+            return " ".join(filtered_words)
+            
         # Stemming
         stemmed_words = [self.stemmer.stem(word) for word in filtered_words]
         return " ".join(stemmed_words)

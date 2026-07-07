@@ -93,7 +93,7 @@ def get_top_topics(db: Session = Depends(get_db)):
     documents = []
     valid_reviews = []
     for r in reviews:
-        cleaned = ml_service.preprocess_text(r.content)
+        cleaned = ml_service.preprocess_text(r.content, use_stemming=False)
         if cleaned:
             documents.append(cleaned)
             valid_reviews.append(r)
