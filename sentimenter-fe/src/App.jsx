@@ -303,8 +303,15 @@ const DashboardPage = () => {
 
                 {/* KPI Cards */}
                 <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-                    <div className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0]">
-                        <p className="text-xs font-bold text-on-surface-variant mb-xs">Total Reviews</p>
+                    <div 
+                        onClick={() => navigate('/reviews')}
+                        className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0] hover:border-primary/50 hover:shadow-md cursor-pointer transition-all group"
+                        title="Klik untuk melihat semua ulasan"
+                    >
+                        <p className="text-xs font-bold text-on-surface-variant mb-xs flex justify-between items-center">
+                            <span>Total Reviews</span>
+                            <span className="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 text-primary transition-opacity">arrow_forward</span>
+                        </p>
                         <div className="flex items-end justify-between">
                             <h2 className="text-3xl font-bold font-plus-jakarta-sans text-primary">{kpi.total_reviews}</h2>
                             <span className="text-secondary text-xs font-bold flex items-center bg-secondary-container/20 px-xs py-[2px] rounded">
@@ -312,8 +319,15 @@ const DashboardPage = () => {
                             </span>
                         </div>
                     </div>
-                    <div className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0]">
-                        <p className="text-xs font-bold text-on-surface-variant mb-xs">Average Play Store Rating</p>
+                    <div 
+                        onClick={() => navigate('/reviews')}
+                        className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0] hover:border-primary/50 hover:shadow-md cursor-pointer transition-all group"
+                        title="Klik untuk mengeksplorasi ulasan rating Play Store"
+                    >
+                        <p className="text-xs font-bold text-on-surface-variant mb-xs flex justify-between items-center">
+                            <span>Average Play Store Rating</span>
+                            <span className="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 text-primary transition-opacity">arrow_forward</span>
+                        </p>
                         <div className="flex items-end gap-sm">
                             <h2 className="text-3xl font-bold font-plus-jakarta-sans text-primary">{kpi.average_rating}<span className="text-on-surface-variant text-[16px] font-normal">/5</span></h2>
                             <div className="flex text-secondary-container mb-2">
@@ -323,8 +337,15 @@ const DashboardPage = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0]">
-                        <p className="text-xs font-bold text-on-surface-variant mb-xs">Overall Sentiment Score</p>
+                    <div 
+                        onClick={() => setFilter(filter === "negative" ? "all" : "negative")}
+                        className={`bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0] hover:border-primary/50 hover:shadow-md cursor-pointer transition-all group ${filter === "negative" ? "ring-2 ring-primary/20 bg-primary-container/5" : ""}`}
+                        title="Klik untuk memfilter ulasan negatif di feed"
+                    >
+                        <p className="text-xs font-bold text-on-surface-variant mb-xs flex justify-between items-center">
+                            <span>Overall Sentiment Score</span>
+                            <span className="material-symbols-outlined text-[16px] text-primary">{filter === "negative" ? "filter_alt_off" : "filter_alt"}</span>
+                        </p>
                         <div className="flex items-end justify-between">
                             <h2 className="text-3xl font-bold font-plus-jakarta-sans text-primary">{kpi.overall_sentiment_score}</h2>
                             <div className="flex items-center gap-xs">
@@ -354,8 +375,30 @@ const DashboardPage = () => {
                         <div className="h-64 relative">
                             {trends.length > 0 ? (
                                 <svg className="w-full h-full" viewBox="0 0 1000 200">
+                                    {/* Grid Lines */}
+                                    <line x1="0" y1="50" x2="1000" y2="50" stroke="#f1f5f9" strokeWidth="1" />
+                                    <line x1="0" y1="110" x2="1000" y2="110" stroke="#f1f5f9" strokeWidth="1" />
+                                    <line x1="0" y1="170" x2="1000" y2="170" stroke="#e2e8f0" strokeWidth="1.5" />
+                                    
+                                    {/* Lines paths */}
                                     {posPath && <path d={posPath} fill="none" stroke="#6cf8bb" strokeLinecap="round" strokeWidth="3"></path>}
                                     {negPath && <path d={negPath} fill="none" stroke="#f23d5c" strokeDasharray="4" strokeLinecap="round" strokeWidth="2"></path>}
+                                    
+                                    {/* Interactive Dots & Guidelines on hover */}
+                                    {trends.map((t, i) => {
+                                        const x = i * (1000 / (trends.length - 1));
+                                        const maxVal = Math.max(...trends.map(tr => Math.max(tr.positive, tr.negative)), 1);
+                                        const yPos = 170 - (t.positive / maxVal * 120);
+                                        const yNeg = 170 - (t.negative / maxVal * 120);
+                                        return (
+                                            <g key={i} className="group/dot cursor-pointer">
+                                                <line x1={x} y1={20} x2={x} y2={170} stroke="#cbd5e1" strokeWidth="1.5" className="opacity-0 group-hover/dot:opacity-100 transition-opacity" strokeDasharray="3" />
+                                                <circle cx={x} cy={yPos} r="5" fill="#6cf8bb" stroke="#ffffff" strokeWidth="1.5" className="transition-transform group-hover/dot:scale-150" />
+                                                <circle cx={x} cy={yNeg} r="5" fill="#f23d5c" stroke="#ffffff" strokeWidth="1.5" className="transition-transform group-hover/dot:scale-150" />
+                                                <title>{`Periode: ${t.date}\nSentimen Positif: ${t.positive} ulasan\nSentimen Negatif: ${t.negative} ulasan`}</title>
+                                            </g>
+                                        );
+                                    })}
                                 </svg>
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-on-surface-variant">No Trend Data</div>
@@ -380,28 +423,47 @@ const DashboardPage = () => {
                     <div className="bg-white p-lg rounded-lg shadow-sm border border-[#E2E8F0] flex flex-col">
                         <h3 className="font-bold font-plus-jakarta-sans text-primary mb-lg">Sentiment Breakdown</h3>
                         <div className="flex-1 flex flex-col items-center justify-center">
-                            <div className="relative w-40 h-40 rounded-full flex items-center justify-center shadow-inner" style={donutStyle}>
-                                <div className="w-28 h-28 bg-white rounded-full flex flex-col items-center justify-center">
-                                    <p className="text-2xl font-bold font-plus-jakarta-sans">{breakdown.positive}%</p>
-                                    <p className="text-[10px] font-bold text-on-surface-variant uppercase">Positive</p>
+                            <div 
+                                onClick={() => setFilter(filter === "positive" ? "negative" : filter === "negative" ? "all" : "positive")}
+                                className="relative w-40 h-40 rounded-full flex items-center justify-center shadow-inner cursor-pointer hover:scale-105 transition-all duration-300 group" 
+                                style={donutStyle}
+                                title="Klik untuk memutar filter sentimen feed"
+                            >
+                                <div className="w-28 h-28 bg-white rounded-full flex flex-col items-center justify-center shadow-sm">
+                                    <p className="text-2xl font-bold font-plus-jakarta-sans group-hover:text-primary transition-colors">
+                                        {filter === "positive" ? `${breakdown.positive}%` : filter === "negative" ? `${breakdown.negative}%` : kpi.overall_sentiment_score}
+                                    </p>
+                                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">
+                                        {filter === "all" ? "Positive Bias" : `${filter}`}
+                                    </p>
                                 </div>
                             </div>
-                            <div className="mt-lg w-full space-y-sm">
-                                <div className="flex justify-between items-center text-sm">
+                            <div className="mt-lg w-full space-y-xs">
+                                <div 
+                                    onClick={() => setFilter(filter === "positive" ? "all" : "positive")}
+                                    className={`flex justify-between items-center text-sm p-sm rounded-lg hover:bg-surface-bright cursor-pointer transition-all border border-transparent ${filter === "positive" ? "bg-primary-container/5 border-outline-variant/30 font-bold" : ""}`}
+                                    title="Klik untuk menyaring ulasan positif"
+                                >
                                     <div className="flex items-center gap-xs">
                                         <span className="w-3 h-3 rounded-sm bg-secondary-container"></span>
                                         <span>Positive</span>
                                     </div>
-                                    <span className="font-bold">{breakdown.positive}%</span>
+                                    <span className="font-bold text-secondary">{breakdown.positive}%</span>
                                 </div>
-                                <div className="flex justify-between items-center text-sm">
+                                <div 
+                                    onClick={() => setFilter(filter === "negative" ? "all" : "negative")}
+                                    className={`flex justify-between items-center text-sm p-sm rounded-lg hover:bg-surface-bright cursor-pointer transition-all border border-transparent ${filter === "negative" ? "bg-primary-container/5 border-outline-variant/30 font-bold" : ""}`}
+                                    title="Klik untuk menyaring ulasan negatif"
+                                >
                                     <div className="flex items-center gap-xs">
                                         <span className="w-3 h-3 rounded-sm bg-on-tertiary-container"></span>
                                         <span>Negative</span>
                                     </div>
-                                    <span className="font-bold">{breakdown.negative}%</span>
+                                    <span className="font-bold text-error">{breakdown.negative}%</span>
                                 </div>
-                                <div className="flex justify-between items-center text-sm">
+                                <div 
+                                    className="flex justify-between items-center text-sm p-sm rounded-lg text-outline"
+                                >
                                     <div className="flex items-center gap-xs">
                                         <span className="w-3 h-3 rounded-sm bg-outline"></span>
                                         <span>Neutral</span>
