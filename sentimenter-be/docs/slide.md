@@ -18,19 +18,37 @@ Dokumen ini disusun slide-per-slide sebagai panduan presentasi sekaligus materi 
 
 ---
 
-## Slide 2: Data Ingestion Engine (Scraper Play Store)
+## Slide 2: Arsitektur Pipeline Data End-to-End
+### **Alur Data dari Google Play Store hingga Layar Pengguna**
+*   **Diagram Alur Data (Data Flow Diagram)**:
+    ```
+    [Play Store API] ──> (Ingestion Scraper) ──> [In-Memory Lookup] ──> [SQLite DB]
+                                                                             │
+    [End-User Dashboard] <── (REST API FastAPI) <── [Inference: Logistic & LDA] <──┘
+    ```
+*   **Tahapan Pipeline**:
+    1.  **Data Ingestion**: Scraper menarik data ulasan pengguna myBCA secara terjadwal/interaktif berdasarkan tanggal ulasan terakhir untuk menjamin kelengkapan data.
+    2.  **Deduplikasi & Storage**: Sistem memfilter data ulasan ganda menggunakan memori RAM (*In-Memory Set*) dalam waktu $O(1)$, lalu menyimpan data baru ke database SQLite.
+    3.  **Machine Learning Inference**:
+        *   Setiap ulasan baru secara instan diprediksi sentimennya (`positif`, `netral`, `negatif`) oleh model **Logistic Regression + TF-IDF**.
+        *   Sistem melakukan klasterisasi **LDA** pada 2.000 ulasan terbaru secara periodik untuk memperbarui topik tren secara dinamis.
+    4.  **Presentation (End-User)**: Dashboard Frontend (React + Tailwind CSS) memvisualisasikan data ulasan, tren grafik interaktif, sebaran sentimen, dan ringkasan AI untuk digunakan oleh tim Developer & IT BCA untuk tindak lanjut keluhan (*actionable feedback*).
+
+---
+
+## Slide 3: Data Ingestion Engine (Scraper Play Store)
 ### **Mekanisme Penarikan Data Skala Besar**
 *   **Arsitektur Ingestion**:
     *   Mengintegrasikan API Google Play Scraper untuk menarik data langsung dari Play Store aplikasi `com.bca.mybca.omni.android`.
     *   Mendukung penarikan berkala (*batch*) mulai dari 50 hingga penarikan penuh tanpa batas (*all reviews* dengan parameter `count=-1`).
 *   **Optimasi Rekayasa Data (Engineering Optimization)**:
     *   **Masalah Awal**: Pengecokan duplikasi ID ulasan menggunakan kueri SQL individual di dalam perulangan (*N+1 Query Problem*) sangat lambat saat memproses ribuan ulasan.
-    *   **Solusi Optimasi**: Menerapkan **In-Memory Set Lookup**. Kueri database hanya dijalankan sekali di awal untuk memuat seluruh ID ke memori RAM dalam struktur data `set` Python. Pengecekan duplikat dilakukan instan dengan kompleksitas waktu **$O(1)$**.
+    *   **Solusi Optimasi**: Menerapkan **In-Memory Set Lookup**. Kueri database hanya dijalankan sekali di awal untuk memuat seluruh ID ke memori RAM dalam struktur data `set` Python. Pengecekkan duplikat dilakukan instan dengan kompleksitas waktu **$O(1)$**.
     *   **Dampak**: Menghilangkan ribuan koneksi SQL bolak-balik, mempercepat proses filter ulasan baru hingga **99.8%**.
 
 ---
 
-## Slide 3: Pipeline Preprocessing & Normalisasi Teks (NLP)
+## Slide 4: Pipeline Preprocessing & Normalisasi Teks (NLP)
 ### **Mengatasi Karakteristik Data Ulasan yang Kotor (Noisy)**
 *   **Tantangan Teks Ulasan Netizen**: Penuh singkatan gaul, salah ketik (*typo*), tanda baca berantakan, dan kata negasi yang menentukan arti kalimat.
 *   **Tahapan Pipeline NLP**:
@@ -41,7 +59,7 @@ Dokumen ini disusun slide-per-slide sebagai panduan presentasi sekaligus materi 
 
 ---
 
-## Slide 4: Analisis Sentimen (Supervised Learning)
+## Slide 5: Analisis Sentimen (Supervised Learning)
 ### **Model Klasifikasi Sentimen Akurasi Tinggi**
 *   **Eksperimen Algoritma & Fitur**:
     *   Meninggalkan model baseline Naive Bayes (akurasi hanya 69-75%).
@@ -52,13 +70,13 @@ Dokumen ini disusun slide-per-slide sebagai panduan presentasi sekaligus materi 
     *   Data testing: 20% stratified split (7.089 ulasan).
 *   **Hasil Evaluasi Pengujian**:
     *   **Akurasi Keseluruhan (Accuracy)**: **82.07%** (Melampaui target projek >80%).
-    *   *Ulasan Negatif*: F1-Score **84%** (Sangkut peka menangkap keluhan).
+    *   *Ulasan Negatif*: F1-Score **84%** (Sangat peka menangkap keluhan).
     *   *Ulasan Positif*: F1-Score **88%** (Sangat presisi menangkap kepuasan).
     *   *Insight Teknikal*: Melatih model pada distribusi alami tanpa oversampling kelas netral terbukti meningkatkan akurasi keseluruhan karena menghindari bias data rating 3 yang bermakna ganda.
 
 ---
 
-## Slide 5: Dynamic Topic Modeling (Unsupervised Learning)
+## Slide 6: Dynamic Topic Modeling (Unsupervised Learning)
 ### **Ekstraksi Keluhan Otomatis Tanpa Kata Kunci Hardcoded**
 *   **Kelemahan Sistem Lama**: Topik dikelompokkan manual berbasis kamus kata kunci statis, tidak mampu mendeteksi masalah baru di luar definisi.
 *   **Solusi Baru (LDA)**:
@@ -71,7 +89,7 @@ Dokumen ini disusun slide-per-slide sebagai panduan presentasi sekaligus materi 
 
 ---
 
-## Slide 6: Analisis & Dampak Bisnis (Dashboard Operasional)
+## Slide 7: Analisis & Dampak Bisnis (Dashboard Operasional)
 ### **Transformasi Data Menjadi Keputusan Bisnis**
 *   **Dashboard Utama**: Menyajikan visualisasi KPI utama, grafik tren bulanan, kata kunci populer, serta ringkasan insight berbasis kecerdasan buatan.
 *   **Manajemen Tugas Tim Internal**:
@@ -82,7 +100,7 @@ Dokumen ini disusun slide-per-slide sebagai panduan presentasi sekaligus materi 
 
 ---
 
-## Slide 7: Kesimpulan Projek
+## Slide 8: Kesimpulan Projek
 ### **Ringkasan Keberhasilan Sentimenter AI**
 1.  **Skalabilitas**: Berhasil menangani puluhan ribu data ulasan myBCA secara berkala dengan sistem filter duplikasi in-memory yang sangat efisien.
 2.  **Akurasi**: Model Logistic Regression berhasil melampaui performa baseline dengan akurasi **82.07%** didukung preprocessing teks terarah (negasi & slang).
