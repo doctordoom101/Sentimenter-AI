@@ -814,7 +814,7 @@ const AllReviewsPage = () => {
     return (
         <div className="min-h-screen">
             <Sidebar />
-            <TopBar title="Reviews Explorer" showSearch={true} searchValue={search} onSearchChange={setSearch} />
+            <TopBar title="Reviews Explorer" showSearch={false} />
             <main className="lg:ml-64 pt-24 pb-24 px-6 space-y-6 max-w-[1440px] mx-auto">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
