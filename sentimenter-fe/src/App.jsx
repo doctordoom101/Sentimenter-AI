@@ -5,10 +5,32 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useParams, u
 
 const Sidebar = () => {
     const location = useLocation();
+    const [isDark, setIsDark] = useState(localStorage.getItem('theme') === 'dark');
+    
     const isActive = (path) => {
         if (path === '/') return location.pathname === '/';
         return location.pathname.startsWith(path);
     };
+
+    const toggleTheme = (dark) => {
+        setIsDark(dark);
+        if (dark) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+    };
+
+    useEffect(() => {
+        // Initial application on mount
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }, []);
 
     return (
         <aside className="w-64 h-screen fixed left-0 top-0 bg-white border-r border-outline-variant shadow-sm flex flex-col py-lg px-md z-40 hidden lg:flex">
@@ -42,7 +64,27 @@ const Sidebar = () => {
                     <span className="text-sm">Topics</span>
                 </Link>
             </nav>
-            <div className="mt-auto pt-lg border-t border-outline-variant flex flex-col gap-sm">
+            
+            {/* Theme Switcher (Radio Buttons) */}
+            <div className="mt-md pt-md border-t border-outline-variant">
+                <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-xs">Tampilan Tema</p>
+                <div className="flex bg-surface-container-low p-1 rounded-lg gap-1 border border-outline-variant/30">
+                    <button 
+                        onClick={() => toggleTheme(false)}
+                        className={`flex-1 py-1 rounded text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${!isDark ? 'bg-white shadow-sm text-primary font-extrabold' : 'text-on-surface-variant hover:text-primary'}`}
+                    >
+                        <span className="material-symbols-outlined text-[14px]">light_mode</span> Light
+                    </button>
+                    <button 
+                        onClick={() => toggleTheme(true)}
+                        className={`flex-1 py-1 rounded text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${isDark ? 'bg-primary text-white shadow-sm font-extrabold' : 'text-on-surface-variant hover:text-primary'}`}
+                    >
+                        <span className="material-symbols-outlined text-[14px]">dark_mode</span> Dark
+                    </button>
+                </div>
+            </div>
+
+            <div className="mt-md pt-md border-t border-outline-variant flex flex-col gap-sm">
                 <div className="flex items-center gap-sm p-sm rounded-lg">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">
                         AD

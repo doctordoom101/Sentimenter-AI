@@ -95,3 +95,52 @@
   .sentiment-bar-neg { @apply bg-red-400; }
   .sentiment-bar-neu { @apply bg-slate-400; }
 }
+
+.dark {
+  --color-background: #0b1329;
+  --color-surface-container-low: #141f38;
+  --color-surface-bright: #1c2a4a;
+  
+  --color-on-surface: #f8fafc;
+  --color-on-surface-variant: #94a3b8;
+  --color-outline-variant: #263554;
+  
+  --color-primary: #0084ff;
+  --color-primary-container: #0084ff;
+  
+  --color-surface-container-high: #1c2a4a;
+  --color-surface-container-highest: #263554;
+  --color-surface-container-lowest: #141f38;
+  --color-surface: #141f38;
+}
+
+/* Global Dark Mode overrides for layout elements */
+.dark .bg-white {
+  background-color: #141f38 !important;
+}
+.dark .border-\[\#E2E8F0\] {
+  border-color: #263554 !important;
+}
+.dark .hover\:bg-surface-container-lowest:hover {
+  background-color: #1c2a4a !important;
+}
+.dark input, .dark textarea, .dark select {
+  background-color: #0b1329 !important;
+  color: #f8fafc !important;
+  border-color: #263554 !important;
+}
+.dark .text-primary {
+  color: #0084ff !important;
+}
+.dark .font-plus-jakarta-sans.text-primary {
+  color: #0084ff !important;
+}
+.dark .bg-surface-container-low\/50 {
+  background-color: rgba(11, 19, 41, 0.5) !important;
+}
+.dark .bg-primary-container\/10 {
+  background-color: rgba(0, 132, 255, 0.1) !important;
+}
+.dark .border-primary\/20 {
+  border-color: rgba(0, 132, 255, 0.2) !important;
+}
