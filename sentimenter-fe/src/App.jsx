@@ -128,13 +128,8 @@ const TopBar = ({ title, showSearch = true, onSearchChange = null, searchValue =
             </div>
             <div className="flex items-center gap-md">
                 <button className="p-sm rounded-full hover:bg-surface-bright text-on-surface-variant">
-                    <span className="material-symbols-outlined">notifications</span>
-                </button>
-                <button className="p-sm rounded-full hover:bg-surface-bright text-on-surface-variant">
                     <span className="material-symbols-outlined">help</span>
                 </button>
-                <div className="h-8 w-[1px] bg-outline-variant mx-2"></div>
-                <img className="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida/AP1WRLsfUzRJP7Jsog9Sgd8khCbmWLK6SRZmWFQUvXG8hfAKxTIi8fIhky7p4TVwIpB6QESghuAC2iAGfdNs7xN8hwxLtmTwS-9WISDhEDJsIM0o3iSBZOq_Q3Txs_y7ZHqIT_ZnzqF65c_zBcBflyIi8vVKeWgG_ll0FG8knUmQa83vCyN5CNixJ4tsQD-Qm7c6tPOYVxlvVz_KnnTWCy-IWgD0KkAcPQXShs42Cz46VIJXlmpDCpGLlZxqZ_c" />
             </div>
         </header>
     );
