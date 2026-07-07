@@ -12,7 +12,7 @@ const Sidebar = () => {
 
     return (
         <aside className="w-64 h-screen fixed left-0 top-0 bg-white border-r border-outline-variant shadow-sm flex flex-col py-lg px-md z-40 hidden lg:flex">
-            <div className="flex items-center gap-sm mb-xl">
+            <div className="flex items-center gap-sm mb-lg">
                 <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                     <span className="material-symbols-outlined text-white" style={{fontVariationSettings: "'FILL' 1"}}>analytics</span>
                 </div>
@@ -21,6 +21,13 @@ const Sidebar = () => {
                     <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Review Management</p>
                 </div>
             </div>
+            
+            {/* myBCA Specific Application Notice */}
+            <div className="mb-lg p-sm rounded-lg bg-primary-container/10 border border-primary/20 text-center">
+                <span className="text-[10px] font-bold text-primary block uppercase tracking-wider">Khusus Review Aplikasi</span>
+                <span className="text-xs font-extrabold text-primary font-plus-jakarta-sans block mt-0.5">myBCA Play Store</span>
+            </div>
+
             <nav className="flex-1 space-y-1">
                 <Link to="/" className={`flex items-center px-md py-sm rounded-lg transition-all ${isActive('/') ? 'bg-surface-container-high text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-bright'}`}>
                     <span className="material-symbols-outlined mr-sm">dashboard</span>
@@ -35,14 +42,26 @@ const Sidebar = () => {
                     <span className="text-sm">Topics</span>
                 </Link>
             </nav>
-            <div className="mt-auto pt-lg border-t border-outline-variant">
-                <div className="flex items-center gap-sm p-sm rounded-lg hover:bg-surface-bright cursor-pointer">
-                    <img alt="User Profile" className="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLsfUzRJP7Jsog9Sgd8khCbmWLK6SRZmWFQUvXG8hfAKxTIi8fIhky7p4TVwIpB6QESghuAC2iAGfdNs7xN8hwxLtmTwS-9WISDhEDJsIM0o3iSBZOq_Q3Txs_y7ZHqIT_ZnzqF65c_zBcBflyIi8vVKeWgG_ll0FG8knUmQa83vCyN5CNixJ4tsQD-Qm7c6tPOYVxlvVz_KnnTWCy-IWgD0KkAcPQXShs42Cz46VIJXlmpDCpGLlZxqZ_c" />
+            <div className="mt-auto pt-lg border-t border-outline-variant flex flex-col gap-sm">
+                <div className="flex items-center gap-sm p-sm rounded-lg">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">
+                        AD
+                    </div>
                     <div className="overflow-hidden">
-                        <p className="text-xs font-bold text-on-surface truncate">Alex Rivers</p>
-                        <p className="text-[10px] text-on-surface-variant truncate">Product Lead</p>
+                        <p className="text-xs font-bold text-on-surface truncate">Admin BCA</p>
+                        <p className="text-[10px] text-on-surface-variant truncate">Administrator</p>
                     </div>
                 </div>
+                <button 
+                    onClick={() => {
+                        localStorage.removeItem("isLoggedIn");
+                        localStorage.removeItem("userRole");
+                        window.location.href = "/login";
+                    }}
+                    className="w-full py-xs px-sm border border-outline-variant hover:bg-error-container/10 hover:text-error hover:border-error/20 rounded-md text-[10px] font-bold transition-all uppercase tracking-wider flex items-center justify-center gap-xs"
+                >
+                    <span className="material-symbols-outlined text-[14px]">logout</span> Logout
+                </button>
             </div>
         </aside>
     );
@@ -68,6 +87,17 @@ const MobileNav = () => {
                 <span className="material-symbols-outlined">topic</span>
                 <span className="text-[10px] font-bold">Topics</span>
             </Link>
+            <button 
+                onClick={() => {
+                    localStorage.removeItem("isLoggedIn");
+                    localStorage.removeItem("userRole");
+                    window.location.href = "/login";
+                }} 
+                className="flex flex-col items-center gap-1 text-on-surface-variant hover:text-error"
+            >
+                <span className="material-symbols-outlined">logout</span>
+                <span className="text-[10px] font-bold">Logout</span>
+            </button>
         </nav>
     );
 };
@@ -1011,14 +1041,95 @@ const TopicsPage = () => {
     );
 };
 
+const LoginPage = () => {
+    const navigate = useNavigate();
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+
+    const handleLogin = (e) => {
+        e.preventDefault();
+        if (username === "admin" && password === "admin123") {
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("userRole", "admin");
+            navigate("/");
+        } else {
+            setError("Username atau password salah!");
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-surface-container-low px-md">
+            <div className="w-full max-w-md bg-white p-lg rounded-xl border border-outline-variant shadow-lg space-y-lg">
+                <div className="text-center space-y-xs">
+                    <div className="size-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-md">
+                        <span className="material-symbols-outlined text-white text-3xl">analytics</span>
+                    </div>
+                    <h2 className="text-2xl font-bold font-plus-jakarta-sans text-primary">Sentimenter AI</h2>
+                    <p className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Khusus Review Aplikasi myBCA</p>
+                </div>
+                
+                {error && (
+                    <div className="p-sm bg-error-container text-on-error-container text-xs font-bold rounded-lg text-center">
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleLogin} className="space-y-md">
+                    <div className="space-y-xs">
+                        <label className="text-xs font-bold text-on-surface-variant uppercase">Username</label>
+                        <input 
+                            type="text" 
+                            className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-md text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                            placeholder="Username (admin)"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="space-y-xs">
+                        <label className="text-xs font-bold text-on-surface-variant uppercase">Password</label>
+                        <input 
+                            type="password" 
+                            className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-md text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                            placeholder="Password (admin123)"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="w-full bg-primary text-white py-md rounded-lg text-sm font-bold hover:opacity-90 transition-opacity mt-lg">
+                        Login
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+const ProtectedRoute = ({ children }) => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const navigate = useNavigate();
+    
+    useEffect(() => {
+        if (!isLoggedIn) {
+            navigate("/login");
+        }
+    }, [isLoggedIn, navigate]);
+    
+    if (!isLoggedIn) return null;
+    return children;
+};
+
 function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/reviews" element={<AllReviewsPage />} />
-                <Route path="/review-detail/:id" element={<ReviewDetailPage />} />
-                <Route path="/topics" element={<TopicsPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                <Route path="/reviews" element={<ProtectedRoute><AllReviewsPage /></ProtectedRoute>} />
+                <Route path="/review-detail/:id" element={<ProtectedRoute><ReviewDetailPage /></ProtectedRoute>} />
+                <Route path="/topics" element={<ProtectedRoute><TopicsPage /></ProtectedRoute>} />
             </Routes>
         </Router>
     );
