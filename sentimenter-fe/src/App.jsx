@@ -1059,46 +1059,48 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-surface-container-low px-md">
-            <div className="w-full max-w-md bg-white p-lg rounded-xl border border-outline-variant shadow-lg space-y-lg">
-                <div className="text-center space-y-xs">
-                    <div className="size-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-md">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-surface-container-low p-6">
+            <div className="w-full max-w-[400px] bg-white p-8 rounded-2xl border border-outline-variant shadow-lg flex flex-col gap-6">
+                <div className="text-center flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-sm mb-2 flex-shrink-0">
                         <span className="material-symbols-outlined text-white text-3xl">analytics</span>
                     </div>
-                    <h2 className="text-2xl font-bold font-plus-jakarta-sans text-primary">Sentimenter AI</h2>
-                    <p className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Khusus Review Aplikasi myBCA</p>
+                    <h2 className="text-2xl font-bold font-plus-jakarta-sans text-primary tracking-tight">Sentimenter AI</h2>
+                    <div className="px-3 py-1 bg-primary-container/10 border border-primary/20 rounded-full">
+                        <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">Khusus Review myBCA</span>
+                    </div>
                 </div>
                 
                 {error && (
-                    <div className="p-sm bg-error-container text-on-error-container text-xs font-bold rounded-lg text-center">
+                    <div className="p-3 bg-error-container text-on-error-container text-xs font-bold rounded-lg text-center border border-error/20">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} className="space-y-md">
-                    <div className="space-y-xs">
-                        <label className="text-xs font-bold text-on-surface-variant uppercase">Username</label>
+                <form onSubmit={handleLogin} className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Username</label>
                         <input 
                             type="text" 
-                            className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-md text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                            className="w-full bg-surface-bright border border-outline-variant rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                             placeholder="Username (admin)"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             required
                         />
                     </div>
-                    <div className="space-y-xs">
-                        <label className="text-xs font-bold text-on-surface-variant uppercase">Password</label>
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Password</label>
                         <input 
                             type="password" 
-                            className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-md text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                            className="w-full bg-surface-bright border border-outline-variant rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                             placeholder="Password (admin123)"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
                     </div>
-                    <button type="submit" className="w-full bg-primary text-white py-md rounded-lg text-sm font-bold hover:opacity-90 transition-opacity mt-lg">
+                    <button type="submit" className="w-full bg-primary text-white py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity mt-4 shadow-sm cursor-pointer">
                         Login
                     </button>
                 </form>
